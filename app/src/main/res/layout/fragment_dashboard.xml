@@ -4,229 +4,178 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
-        android:id="@+id/top_ll"
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:background="?android:colorPrimary"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:paddingVertical="20dp" />
 
-    <TextView
-        android:id="@+id/tv1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginVertical="20sp"
-        android:text="@string/dashboard"
-        android:textColor="@color/white"
-        android:textSize="35sp" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.cardview.widget.CardView
         android:id="@+id/banner"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:layout_columnWeight="1"
-        android:layout_below="@id/tv1">
+        android:layout_height="140dp"
+        android:layout_margin="10dp"
+        android:background="@color/white"
+        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="5dp"
+        app:cardElevation="2dp">
 
-        <androidx.cardview.widget.CardView
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="10dp"
-            android:background="@color/white"
-            app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="5dp"
-            app:cardElevation="2dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nothing Added Yet"
+                android:textColor="@color/black"
+                android:textSize="30sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
 
 
-        </androidx.cardview.widget.CardView>
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <LinearLayout
-        android:padding="20sp"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/banner"
         android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="10sp">
 
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:id="@+id/backup_ll"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintDimensionRatio="W,1:1"
+            app:layout_constraintEnd_toStartOf="@id/settings_ll"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-            <LinearLayout
-                android:id="@+id/backup_ll"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_server_svgrepo_com" />
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@color/white"
-                    android:padding="5dp"
-                    android:text="@string/backup"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/light_gray" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_server_svgrepo_com" />
 
             <TextView
-                android:layout_width="100dp"
-                android:layout_height="100dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:background="@color/white"
-                android:gravity="center"
-                android:text="@string/coming_soon"
-                android:textAlignment="center"
+                android:padding="5dp"
+                android:text="@string/backup"
+                android:textColor="@color/black"
                 android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textStyle="normal" />
+        </LinearLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/light_gray" />
+        <LinearLayout
+            android:id="@+id/settings_ll"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintDimensionRatio="W,1:1"
+            app:layout_constraintEnd_toStartOf="@id/ll3"
+            app:layout_constraintStart_toEndOf="@id/backup_ll"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_settings_svgrepo_com" />
 
             <TextView
-                android:layout_width="100dp"
-                android:layout_height="100dp"
+                android:layout_width="wrap_content"
+
+                android:layout_height="wrap_content"
                 android:background="@color/white"
-                android:gravity="center"
-                android:text="@string/coming_soon"
-                android:textAlignment="center"
+                android:padding="5dp"
+                android:text="@string/settings"
+                android:textColor="@color/black"
                 android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textStyle="normal" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll3"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintDimensionRatio="W,1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/settings_ll"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:visibility="gone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_server_svgrepo_com" />
+
+            <TextView
+                android:layout_width="wrap_content"
+
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:padding="5dp"
+                android:text="@string/coming_soon"
+                android:textColor="@color/black"
+                android:textSize="15sp"
+                android:textStyle="normal" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll4"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintDimensionRatio="W,1:1"
+            app:layout_constraintEnd_toEndOf="@id/backup_ll"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/backup_ll">
+
+            <ImageView
+                android:visibility="gone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_server_svgrepo_com" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:padding="5dp"
+                android:text="@string/coming_soon"
+                android:textColor="@color/black"
+                android:textSize="15sp"
+                android:textStyle="normal" />
         </LinearLayout>
 
         <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="@color/light_gray" />
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@drawable/bg_fade_horizontalline"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/backup_ll" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:id="@+id/settings_ll"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_settings_svgrepo_com" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@color/white"
-                    android:padding="5dp"
-                    android:text="@string/settings"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/light_gray" />
-
-            <TextView
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:background="@color/white"
-                android:gravity="center"
-                android:text="@string/coming_soon"
-                android:textAlignment="center"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/light_gray" />
-
-            <TextView
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:background="@color/white"
-                android:gravity="center"
-                android:text="@string/coming_soon"
-                android:textAlignment="center"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-        </LinearLayout>
 
         <View
             android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="@color/light_gray" />
+            android:layout_height="0dp"
+            android:background="@drawable/bg_fade_vertical_line"
+            app:layout_constraintBottom_toBottomOf="@id/ll4"
+            app:layout_constraintStart_toEndOf="@id/backup_ll"
+            app:layout_constraintTop_toTopOf="@id/backup_ll" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:background="@color/white"
-                android:gravity="center"
-                android:text="@string/coming_soon"
-                android:textAlignment="center"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/light_gray" />
-
-            <TextView
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:background="@color/white"
-                android:gravity="center"
-                android:text="@string/coming_soon"
-                android:textAlignment="center"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/light_gray" />
-
-            <TextView
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:background="@color/white"
-                android:gravity="center"
-                android:text="@string/coming_soon"
-                android:textAlignment="center"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-    </LinearLayout>
+        <View
+            android:layout_width="1dp"
+            android:layout_height="0dp"
+            android:background="@drawable/bg_fade_vertical_line"
+            app:layout_constraintBottom_toBottomOf="@id/ll4"
+            app:layout_constraintStart_toEndOf="@id/settings_ll"
+            app:layout_constraintTop_toTopOf="@id/backup_ll" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </RelativeLayout>

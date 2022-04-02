@@ -68,6 +68,8 @@ public class SelectedFolderListActivity extends AppCompatActivity implements Sel
         binding = ActivitySelectedFolderListBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        getSupportActionBar().setTitle("Selected Folder Being Synced");
+
         selectFolderDialog = new SelectFolderDialog(this, this);
         folders = new ArrayList<>();
         loadingDialog = new LoadingDialog();

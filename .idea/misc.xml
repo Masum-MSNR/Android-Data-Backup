@@ -3,6 +3,8 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/drawable/bg_fade_gradient.xml" value="0.2775" />
+        <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/drawable/bg_fade_horizontalline.xml" value="0.2775" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/drawable/bg_top_rounded.xml" value="0.1545" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/drawable/ic_baseline_add_24.xml" value="0.178" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/drawable/ic_baseline_arrow_back_24.xml" value="0.178" />
@@ -14,6 +16,7 @@
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/drawable/ic_baseline_settings_24.xml" value="0.178" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/drawable/ic_server_svgrepo_com.xml" value="0.162" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/drawable/ic_settings_svgrepo_com.xml" value="0.173" />
+        <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_connectivity.xml" value="0.36666666666666664" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_main.xml" value="0.33" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_selected_folder_list.xml" value="0.20416666666666666" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_settings.xml" value="0.25" />
@@ -21,9 +24,10 @@
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/adapter_folder_file_list_narrow.xml" value="0.33" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/adapter_full_folder.xml" value="0.25" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/dialog_loading.xml" value="0.20416666666666666" />
-        <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/dialog_select_folder.xml" value="0.20416666666666666" />
+        <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/dialog_select_folder.xml" value="0.5" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/fragment_blank.xml" value="0.20416666666666666" />
-        <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/fragment_dashboard.xml" value="0.33" />
+        <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/fragment_dashboard.xml" value="0.25" />
+        <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/test.xml" value="0.25" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/menu/home_menu.xml" value="0.20416666666666666" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/menu/nav_menu.xml" value="0.20416666666666666" />
       </map>

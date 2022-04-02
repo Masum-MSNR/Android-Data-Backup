@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        getSupportActionBar().setTitle("Dashboard");
 
         binding.bottomNavigation.setOnItemSelectedListener(listener);
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new DashboardFragment(this)).commit();
@@ -36,8 +37,9 @@ public class MainActivity extends AppCompatActivity {
         } else {
             currentFragment = new BlankFragment();
         }
+        getSupportActionBar().setTitle(item.getTitle());
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, currentFragment).commit();
-        return false;
+        return true;
     };
 
 }

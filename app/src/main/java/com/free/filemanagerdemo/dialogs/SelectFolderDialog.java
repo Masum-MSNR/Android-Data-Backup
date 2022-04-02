@@ -2,6 +2,7 @@ package com.free.filemanagerdemo.dialogs;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
@@ -42,6 +43,9 @@ public class SelectFolderDialog extends AppCompatDialogFragment implements Folde
         LayoutInflater inflater = requireActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.dialog_select_folder, null);
         binding = DialogSelectFolderBinding.bind(view);
+
+        binding.instructionTv.setPaintFlags(binding.instructionTv.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+
 
         folders = new ArrayList<>();
         adapter = new FolderAdapter(context, folders, this);
