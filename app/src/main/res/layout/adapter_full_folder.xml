@@ -19,21 +19,21 @@
         android:id="@+id/folder_name_tv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_toStartOf="@id/close_ibt"
+        android:layout_toStartOf="@id/sync_iv"
         android:layout_toEndOf="@id/icon_iv"
         android:padding="10dp"
         android:textColor="@color/black"
         tools:text="Documents" />
 
     <ImageView
-        android:id="@+id/close_ibt"
+        android:id="@+id/sync_iv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
+        android:layout_alignBottom="@+id/folder_name_tv"
+        android:layout_alignTop="@+id/folder_name_tv"
         android:padding="5dp"
-        android:src="@drawable/ic_baseline_close_24"
-        android:visibility="gone"
+        android:src="@drawable/ic_baseline_sync_24"
         tools:ignore="ContentDescription" />
 
     <View

@@ -13,7 +13,7 @@ import android.text.format.DateFormat;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.free.filemanagerdemo.broadcastReceivers.TestReceiver;
+import com.free.filemanagerdemo.broadcastReceivers.TaskReceiver;
 import com.free.filemanagerdemo.databinding.ActivitySettingsBinding;
 
 import java.util.Calendar;
@@ -49,7 +49,7 @@ public class SettingsActivity extends AppCompatActivity {
             editor.putString("time", time);
             editor.apply();
             PendingIntent pi = PendingIntent.getBroadcast(this, 0,
-                    new Intent(this, TestReceiver.class), PendingIntent.FLAG_UPDATE_CURRENT);
+                    new Intent(this, TaskReceiver.class), PendingIntent.FLAG_UPDATE_CURRENT);
             AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
             am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
                     AlarmManager.INTERVAL_DAY, pi);

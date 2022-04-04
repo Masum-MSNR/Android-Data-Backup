@@ -1,10 +1,14 @@
 package com.free.filemanagerdemo.adapters;
 
+import static com.free.filemanagerdemo.utils.Consts.ROOT_KEY;
+
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -12,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.free.filemanagerdemo.R;
 import com.free.filemanagerdemo.databinding.AdapterFullFolderBinding;
+import com.free.filemanagerdemo.driveApi.GoogleDriveServiceHelper;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -21,11 +26,12 @@ public class FullFolderAdapter extends RecyclerView.Adapter<FullFolderAdapter.Vi
 
     Context context;
     ArrayList<String> folders;
+    GoogleDriveServiceHelper helper;
 
-    public FullFolderAdapter(Context context, ArrayList<String> folders) {
+    public FullFolderAdapter(Context context, ArrayList<String> folders, GoogleDriveServiceHelper helper) {
         this.context = context;
         this.folders = folders;
-        Log.v("size", String.valueOf(folders.size()));
+        this.helper = helper;
     }
 
 
@@ -39,6 +45,8 @@ public class FullFolderAdapter extends RecyclerView.Adapter<FullFolderAdapter.Vi
     @Override
     public void onBindViewHolder(FullFolderAdapter.ViewHolder h, int position) {
 
+        Animation animation = AnimationUtils.loadAnimation(context, R.anim.rotate_animation);
+
         int p = h.getAdapterPosition();
         String revPath = new StringBuilder(folders.get(p)).reverse().toString();
         int i = revPath.indexOf('/');
@@ -46,11 +54,13 @@ public class FullFolderAdapter extends RecyclerView.Adapter<FullFolderAdapter.Vi
         revPath = new StringBuilder(revPath).reverse().toString();
         Log.v("path", revPath);
         h.binding.folderNameTv.setText(revPath);
+        h.binding.syncIv.startAnimation(animation);
 
+        Log.v(folders.get(p), fileCounter(folders.get(p)) + "");
+        helper.uploadFolder(folders.get(p), folders.get(p), ROOT_KEY, fileCounter(folders.get(p)), animation);
 
         h.itemView.setOnClickListener(v -> {
             h.binding.folderItemsRv.setVisibility(h.binding.folderItemsRv.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-//            notifyItemChanged(p);
         });
 
         h.binding.folderItemsRv.setLayoutManager(new LinearLayoutManager(context));
@@ -82,5 +92,16 @@ public class FullFolderAdapter extends RecyclerView.Adapter<FullFolderAdapter.Vi
         }
     }
 
-
+    private int fileCounter(String path) {
+        int count = 0;
+        File root = new File(path);
+        File[] filesAndFolders = root.listFiles();
+        for (File file : filesAndFolders) {
+            if (file.isDirectory()) {
+                count += fileCounter(file.getPath());
+            } else
+                count++;
+        }
+        return count;
+    }
 }

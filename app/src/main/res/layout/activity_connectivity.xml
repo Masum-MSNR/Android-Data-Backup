@@ -47,4 +47,13 @@
         app:layout_constraintEnd_toEndOf="@+id/connect_to_google_bt"
         app:layout_constraintStart_toStartOf="@+id/connect_to_google_bt"
         app:layout_constraintTop_toBottomOf="@+id/connect_to_google_bt" />
+
+    <Button
+        android:id="@+id/selected_folders_bt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Selected Folders"
+        app:layout_constraintEnd_toEndOf="@+id/pick_folder_bt"
+        app:layout_constraintStart_toStartOf="@+id/pick_folder_bt"
+        app:layout_constraintTop_toBottomOf="@+id/pick_folder_bt" />
 </androidx.constraintlayout.widget.ConstraintLayout>

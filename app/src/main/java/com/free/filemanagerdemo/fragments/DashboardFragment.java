@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.free.filemanagerdemo.activities.ConnectivityActivity;
 import com.free.filemanagerdemo.activities.SelectedFolderListActivity;
 import com.free.filemanagerdemo.activities.SettingsActivity;
 import com.free.filemanagerdemo.databinding.FragmentDashboardBinding;
@@ -34,7 +35,7 @@ public class DashboardFragment extends Fragment {
         binding = FragmentDashboardBinding.inflate(getLayoutInflater());
 
         binding.backupLl.setOnClickListener(v -> {
-            startActivity(new Intent(context, SelectedFolderListActivity.class));
+            startActivity(new Intent(context, ConnectivityActivity.class));
         });
 
         binding.settingsLl.setOnClickListener(v->{

@@ -14,4 +14,9 @@ public class Functions {
     public static Set<String> getPaths(SharedPreferences preferences, String key) {
         return preferences.getStringSet(key, new HashSet<>());
     }
+
+    public static void setRootId(String key, String rootId, SharedPreferences.Editor editor) {
+        editor.putString(key, rootId);
+        editor.apply();
+    }
 }

@@ -1,4 +1,4 @@
-package com.free.filemanagerdemo.utils;
+package com.free.filemanagerdemo.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;

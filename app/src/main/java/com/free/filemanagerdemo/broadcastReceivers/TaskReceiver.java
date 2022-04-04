@@ -6,12 +6,11 @@ import static com.free.filemanagerdemo.utils.Consts.MY_PREFS_NAME;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
+import com.free.filemanagerdemo.R;
+import com.free.filemanagerdemo.driveApi.GoogleDriveServiceHelper;
 import com.free.filemanagerdemo.utils.Functions;
-import com.free.filemanagerdemo.utils.GoogleDriveServiceHelper;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.json.gson.GsonFactory;
@@ -23,7 +22,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public class TestReceiver extends BroadcastReceiver {
+/**Broadcast Receiver class triggers at the set time even the off is not open.*/
+
+public class TaskReceiver extends BroadcastReceiver {
 
     GoogleDriveServiceHelper driverServiceHelper;
 
@@ -39,50 +40,58 @@ public class TestReceiver extends BroadcastReceiver {
                         AndroidHttp.newCompatibleTransport(),
                         new GsonFactory(),
                         credential)
-                        .setApplicationName("Drive API Migration")
+                        .setApplicationName(context.getString(R.string.app_name))
                         .build();
         driverServiceHelper = new GoogleDriveServiceHelper(context, googleDriveService);
 
         Set<String> pathSet = new HashSet<>(Functions.getPaths(context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE), "selected_paths"));
         for (String path : pathSet) {
-            uploadFolder(path);
+            String rootId = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).getString("root_id", "");
+            if (rootId.isEmpty())
+                break;
+            uploadFolder(path, rootId);
         }
     }
 
-    private void uploadFolder(String path) {
+    private void uploadFolder(String path, String parentId) {
         File root = new File(path);
         String folderName = root.getName();
-        driverServiceHelper.isFolderPresent(folderName)
+        driverServiceHelper.isFolderPresent(folderName, parentId)
                 .addOnSuccessListener(id -> {
                     if (id.isEmpty()) {
-                        driverServiceHelper.createFolder(folderName)
+                        driverServiceHelper.createNewFolder(folderName, parentId)
                                 .addOnSuccessListener(folderId -> {
                                     File[] fileFolders = root.listFiles();
                                     if (fileFolders != null) {
                                         for (File file : fileFolders) {
                                             if (file.isDirectory()) {
-                                                uploadFolder(file.getPath());
+                                                uploadFolder(file.getPath(), folderId);
                                             } else {
-                                                driverServiceHelper.uploadFileToGoogleDrive(file.getPath(), folderId);
+                                                driverServiceHelper.isFilePresent(file.getPath(), folderId).addOnSuccessListener(aBoolean -> {
+                                                    if (!aBoolean) {
+                                                        driverServiceHelper.uploadFileToGoogleDrive(file.getPath(), folderId);
+                                                    }
+                                                });
                                             }
                                         }
                                     }
-                                })
-                                .addOnFailureListener(exception -> Log.v("e", exception.toString()));
+                                });
                     } else {
                         File[] fileFolders = root.listFiles();
                         if (fileFolders != null) {
                             for (File file : fileFolders) {
                                 if (file.isDirectory()) {
-                                    uploadFolder(file.getPath());
+                                    uploadFolder(file.getPath(), id);
                                 } else {
-                                    driverServiceHelper.uploadFileToGoogleDrive(file.getPath(), id);
+                                    driverServiceHelper.isFilePresent(file.getPath(), id).addOnSuccessListener(aBoolean -> {
+                                        if (!aBoolean) {
+                                            driverServiceHelper.uploadFileToGoogleDrive(file.getPath(), id);
+                                        }
+                                    });
                                 }
                             }
                         }
                     }
-
-                })
-                .addOnFailureListener(exception -> Log.v("e", exception.toString()));
+                });
     }
 }
