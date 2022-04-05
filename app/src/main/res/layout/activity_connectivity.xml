@@ -1,59 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".activities.ConnectivityActivity">
+    android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/connect_to_google_bt"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Connect to google drive first"
-        app:layout_constraintBottom_toTopOf="@+id/pick_folder_bt"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        tools:context=".activities.ConnectivityActivity">
 
-    <Button
-        android:id="@+id/pick_folder_bt"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Pick folder to sync and backup"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/connect_to_google_bt" />
+        <Button
+            android:id="@+id/connect_to_google_bt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Connect to google drive first"
+            app:layout_constraintBottom_toTopOf="@+id/pick_folder_bt"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/connected_tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Google Drive is now connected"
-        android:textColor="@color/black"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@+id/connect_to_google_bt"
-        app:layout_constraintEnd_toEndOf="@+id/connect_to_google_bt"
-        app:layout_constraintStart_toStartOf="@+id/connect_to_google_bt"
-        app:layout_constraintTop_toTopOf="@+id/connect_to_google_bt" />
+        <TextView
+            android:id="@+id/connected_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Google Drive is now connected"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@+id/connect_to_google_bt"
+            app:layout_constraintEnd_toEndOf="@+id/connect_to_google_bt"
+            app:layout_constraintStart_toStartOf="@+id/connect_to_google_bt"
+            app:layout_constraintTop_toTopOf="@+id/connect_to_google_bt" />
 
-    <Button
-        android:id="@+id/disconnect_bt"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Disconnect"
-        app:layout_constraintEnd_toEndOf="@+id/connect_to_google_bt"
-        app:layout_constraintStart_toStartOf="@+id/connect_to_google_bt"
-        app:layout_constraintTop_toBottomOf="@+id/connect_to_google_bt" />
+        <Button
+            android:id="@+id/pick_folder_bt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pick folder to sync and backup"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/connect_to_google_bt" />
 
-    <Button
-        android:id="@+id/selected_folders_bt"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Selected Folders"
-        app:layout_constraintEnd_toEndOf="@+id/pick_folder_bt"
-        app:layout_constraintStart_toStartOf="@+id/pick_folder_bt"
-        app:layout_constraintTop_toBottomOf="@+id/pick_folder_bt" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/last_sync_tv"
+            app:layout_constraintEnd_toEndOf="@+id/connect_to_google_bt"
+            app:layout_constraintStart_toStartOf="@+id/connect_to_google_bt"
+            app:layout_constraintTop_toBottomOf="@+id/connected_tv" />
+
+        <Button
+            android:id="@+id/selected_folders_bt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Selected Folders"
+            app:layout_constraintEnd_toEndOf="@+id/pick_folder_bt"
+            app:layout_constraintStart_toStartOf="@+id/pick_folder_bt"
+            app:layout_constraintTop_toBottomOf="@+id/pick_folder_bt" />
+
+        <TextView
+            android:id="@+id/last_sync_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Last Synced: "
+            android:textColor="@color/black"
+            app:layout_constraintBottom_toTopOf="@+id/pick_folder_bt"
+            app:layout_constraintEnd_toEndOf="@+id/pick_folder_bt"
+            app:layout_constraintStart_toStartOf="@+id/pick_folder_bt"
+            app:layout_constraintTop_toBottomOf="@+id/connect_to_google_bt" />
+
+        <TextView
+            android:id="@+id/tv1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:text="@string/backup_time"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/selected_folders_bt" />
+
+        <LinearLayout
+            android:id="@+id/time_ll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="@+id/tv1"
+            app:layout_constraintStart_toStartOf="@+id/tv1"
+            app:layout_constraintTop_toBottomOf="@+id/tv1">
+
+            <TextView
+                android:id="@+id/time_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="5dp"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                tools:text="12.00 AM" />
+
+            <ImageButton
+                android:id="@+id/edit_ibt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:padding="5dp"
+                app:srcCompat="@drawable/ic_baseline_edit_24"
+                app:tint="@color/black"
+                tools:ignore="ContentDescription" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/try_again_bt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Try Again"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="@+id/progress_bar"
+            app:layout_constraintEnd_toEndOf="@+id/connect_to_google_bt"
+            app:layout_constraintStart_toStartOf="@+id/connect_to_google_bt"
+            app:layout_constraintTop_toTopOf="@+id/progress_bar" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

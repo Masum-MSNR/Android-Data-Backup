@@ -7,19 +7,7 @@
         android:icon="@drawable/ic_baseline_dashboard_24"
         android:title="Dashboard" />
     <item
-        android:id="@+id/dummy1"
-        android:title="Dummy1"
-        android:icon="@drawable/ic_baseline_add_24"/>
-    <item
-        android:id="@+id/dummy2"
-        android:title="Dummy2"
-        android:icon="@drawable/ic_baseline_add_24" />
-    <item
-        android:id="@+id/dummy3"
-        android:title="Dummy3"
-        android:icon="@drawable/ic_baseline_add_24" />
-    <item
-        android:id="@+id/dummy4"
-        android:title="Dummy4"
-        android:icon="@drawable/ic_baseline_add_24" />
+        android:id="@+id/log"
+        android:title="Log"
+        android:icon="@drawable/ic_log_svgrepo_com"/>
 </menu>

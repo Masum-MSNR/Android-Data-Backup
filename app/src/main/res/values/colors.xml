@@ -15,4 +15,7 @@
     <color name="dim_gray">#696969</color>
     <color name="dark_gray">#3A3B3C</color>
     <color name="light_black">#454545</color>
+
+    <color name="green">#008000</color>
+    <color name="error">#ff3333</color>
 </resources>

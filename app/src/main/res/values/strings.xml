@@ -1,14 +1,15 @@
 <resources>
-    <string name="app_name">File Manager Demo</string>
+    <string name="app_name">CloudApps</string>
     <string name="empty">Empty!</string>
     <string name="select">Select</string>
     <string name="selected_folders">Selected Folders</string>
     <string name="settings">Settings</string>
     <string name="backup_time">Backup Time:</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="dashboard">Dashboard</string>
     <string name="backup">Backup</string>
     <string name="coming_soon">Coming\nSoon..</string>
     <string name="loading">Loading…</string>
+    <string name="log">Log</string>
+    <string name="analytics">Analytics</string>
 </resources>
