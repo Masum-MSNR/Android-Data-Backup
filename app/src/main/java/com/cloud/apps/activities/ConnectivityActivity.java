@@ -3,16 +3,13 @@ package com.cloud.apps.activities;
 import static com.cloud.apps.utils.Consts.GLOBAL_KEY;
 import static com.cloud.apps.utils.Consts.MY_PREFS_NAME;
 import static com.cloud.apps.utils.Consts.ROOT_KEY;
+import static com.cloud.apps.utils.Functions.setAlarm;
 import static com.cloud.apps.utils.Functions.setRootId;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.app.TimePickerDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -23,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.MutableLiveData;
 
 import com.cloud.apps.R;
-import com.cloud.apps.broadcastReceivers.TaskReceiver;
 import com.cloud.apps.databinding.ActivityConnectivityBinding;
 import com.cloud.apps.dialogs.SelectFolderDialog;
 import com.cloud.apps.driveApi.GoogleDriveServiceHelper;
@@ -61,7 +57,6 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
     MutableLiveData<Boolean> isLoggedIn;
     MutableLiveData<Boolean> isConnecting;
 
-    Calendar calendar;
     TimePickerDialog timePickerDialog;
     SharedPreferences preferences;
     SharedPreferences.Editor editor;
@@ -84,8 +79,6 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
         preferences = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
         editor = preferences.edit();
 
-        calendar = Calendar.getInstance(Locale.getDefault());
-        Log.v("MILISEC1", String.valueOf(calendar.getTimeInMillis()));
 
 
         String tempTime = preferences.getString("time", "12:00 AM");
@@ -93,26 +86,11 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
         binding.timeTv.setText(tempTime);
 
         timePickerDialog = new TimePickerDialog(this, (timePicker, selectedHour, selectedMinute) -> {
-            calendar.setTimeInMillis(System.currentTimeMillis());
-            calendar.set(Calendar.HOUR_OF_DAY, selectedHour);
-            calendar.set(Calendar.MINUTE, selectedMinute);
-            calendar.set(Calendar.SECOND, 0);
-            calendar.set(Calendar.MILLISECOND, 0);
+            String time = setAlarm(this, selectedHour, selectedMinute);
 
-            if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
-                calendar.set(Calendar.DAY_OF_MONTH, calendar.get(Calendar.DAY_OF_MONTH) + 1);
-            }
-
-            String time = DateFormat.format("hh:mm aa", calendar).toString();
             binding.timeTv.setText(time);
             editor.putString("time", time);
             editor.apply();
-            Intent intent = new Intent(this, TaskReceiver.class);
-            PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-            AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            am.setAlarmClock(new AlarmManager.AlarmClockInfo(calendar.getTimeInMillis(), pi), pi);
-//            am.setRepeating(AlarmManager.RTC, calendar.getTimeInMillis(),
-//                    AlarmManager.INTERVAL_DAY, pi);
         }, Integer.parseInt(tempTime.substring(0, 2)), Integer.parseInt(tempTime.substring(3, 5)), false);
 
         binding.editIbt.setOnClickListener(v -> {

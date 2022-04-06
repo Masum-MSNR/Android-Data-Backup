@@ -57,7 +57,6 @@ public class SelectedFolderListActivity extends AppCompatActivity implements Sel
         loadingDialog = new LoadingDialog();
         loadToast = new LoadToast(this);
 
-//        binding.uploadFab.setVisibility(GoogleSignIn.getLastSignedInAccount(this) != null ? View.VISIBLE : View.GONE);
 
         if (GoogleSignIn.getLastSignedInAccount(this) != null) {
             GoogleAccountCredential credential =
@@ -78,7 +77,6 @@ public class SelectedFolderListActivity extends AppCompatActivity implements Sel
             selectFolderDialog.show(getSupportFragmentManager(), selectFolderDialog.getTag());
         });
 
-//        binding.uploadFab.setOnClickListener(v -> upload(ROOT_KEY));
 
         adapter = new FullFolderAdapter(this, folders, driverServiceHelper);
         binding.selectedFoldersRv.setLayoutManager(new LinearLayoutManager(this));
@@ -98,102 +96,6 @@ public class SelectedFolderListActivity extends AppCompatActivity implements Sel
         adapter.notifyItemRangeChanged(0, folders.size());
     }
 
-//    public void upload(String id) {
-//        Set<String> pathSet = new HashSet<>(Functions.getPaths(getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE), "selected_paths"));
-//        count = 0;
-//        uploadedCount = 0;
-//        for (String path : pathSet) {
-//            fileCounter(path);
-//        }
-//        for (String path : pathSet) {
-//            uploadFolder(path, id);
-//        }
-//    }
-
-
-//    private void fileCounter(String path) {
-//        File root = new File(path);
-//        File[] filesAndFolders = root.listFiles();
-//        for (File file : filesAndFolders) {
-//            if (file.isDirectory()) {
-//                fileCounter(file.getPath());
-//            } else
-//                count++;
-//        }
-//    }
-
-//    private void uploadFolder(String path, String parentId) {
-//        File root = new File(path);
-//        String folderName = root.getName();
-//        driverServiceHelper.isFolderPresent(folderName, parentId)
-//                .addOnSuccessListener(id -> {
-//                    if (id.isEmpty()) {
-//                        driverServiceHelper.createNewFolder(folderName, parentId)
-//                                .addOnSuccessListener(folderId -> {
-//                                    File[] fileFolders = root.listFiles();
-//                                    if (fileFolders != null) {
-//                                        for (File file : fileFolders) {
-//                                            if (file.isDirectory()) {
-//                                                uploadFolder(file.getPath(), folderId);
-//                                            } else {
-//                                                driverServiceHelper.isFilePresent(file.getPath(), folderId).addOnSuccessListener(aBoolean -> {
-//                                                    if (!aBoolean) {
-//                                                        driverServiceHelper.uploadFileToGoogleDrive(file.getPath(), folderId).addOnSuccessListener(aBoolean1 -> {
-//                                                            if (aBoolean1) {
-//                                                                SelectedFolderListActivity.uploadedCount++;
-//                                                                if (SelectedFolderListActivity.count == SelectedFolderListActivity.uploadedCount) {
-//                                                                    Toast.makeText(SelectedFolderListActivity.this, "Upload Successful.", Toast.LENGTH_SHORT).show();
-//                                                                    SelectedFolderListActivity.loadingDialog.dismiss();
-//                                                                }
-//                                                            }
-//                                                        });
-//                                                    } else {
-//                                                        SelectedFolderListActivity.uploadedCount++;
-//                                                        if (SelectedFolderListActivity.count == SelectedFolderListActivity.uploadedCount) {
-//                                                            Toast.makeText(SelectedFolderListActivity.this, "Upload Successful.", Toast.LENGTH_SHORT).show();
-//                                                            SelectedFolderListActivity.loadingDialog.dismiss();
-//                                                        }
-//                                                    }
-//                                                });
-//                                            }
-//                                        }
-//                                    }
-//                                })
-//                                .addOnFailureListener(exception -> Log.v("e", exception.toString()));
-//                    } else {
-//                        File[] fileFolders = root.listFiles();
-//                        if (fileFolders != null) {
-//                            for (File file : fileFolders) {
-//                                if (file.isDirectory()) {
-//                                    uploadFolder(file.getPath(), id);
-//                                } else {
-//                                    driverServiceHelper.isFilePresent(file.getPath(), id).addOnSuccessListener(aBoolean -> {
-//                                        if (!aBoolean) {
-//                                            driverServiceHelper.uploadFileToGoogleDrive(file.getPath(), id).addOnSuccessListener(aBoolean1 -> {
-//                                                if (aBoolean1) {
-//                                                    SelectedFolderListActivity.uploadedCount++;
-//                                                    if (SelectedFolderListActivity.count == SelectedFolderListActivity.uploadedCount) {
-//                                                        Toast.makeText(SelectedFolderListActivity.this, "Upload Successful.", Toast.LENGTH_SHORT).show();
-//                                                        SelectedFolderListActivity.loadingDialog.dismiss();
-//                                                    }
-//                                                }
-//                                            });
-//                                        } else {
-//                                            SelectedFolderListActivity.uploadedCount++;
-//                                            if (SelectedFolderListActivity.count == SelectedFolderListActivity.uploadedCount) {
-//                                                Toast.makeText(SelectedFolderListActivity.this, "Upload Successful.", Toast.LENGTH_SHORT).show();
-//                                                SelectedFolderListActivity.loadingDialog.dismiss();
-//                                            }
-//                                        }
-//                                    });
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                })
-//                .addOnFailureListener(exception -> Log.v("e", exception.toString()));
-//    }
 
     @Override
     public void onSelect(ArrayList<String> paths) {

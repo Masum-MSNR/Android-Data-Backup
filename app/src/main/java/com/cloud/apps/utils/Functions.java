@@ -3,12 +3,18 @@ package com.cloud.apps.utils;
 import static com.cloud.apps.utils.Consts.MY_PREFS_NAME;
 import static com.cloud.apps.utils.Consts.mutableLogSet;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.text.format.DateFormat;
 import android.util.Log;
 
-import java.io.OutputStreamWriter;
+import com.cloud.apps.broadcastReceivers.TaskReceiver;
+
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
@@ -30,17 +36,6 @@ public class Functions {
         editor.apply();
     }
 
-    public static void saveLog(OutputStreamWriter out, String newLog) {
-        Log.v("Log", newLog);
-//        Consts.LOG += newLog + "\n";
-//        try {
-//            out.append(newLog);
-//            out.append("\n");
-//            out.flush();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-    }
 
     public static void saveNewLog(Context context, String newLog) {
         TreeSet<String> logSet = new TreeSet<>(mutableLogSet.getValue());
@@ -51,48 +46,31 @@ public class Functions {
         mutableLogSet.postValue(logSet);
     }
 
-//    public static String getLog() {
-//        File root = new File(Environment.getExternalStorageDirectory(), "Demo Log");
-//        if (!root.exists()) {
-//            root.mkdirs();
-//        }
-//        File file = new File(root, "test_log.txt");
-//        StringBuilder text = new StringBuilder();
-//
-//        try {
-//            BufferedReader br = new BufferedReader(new FileReader(file));
-//            String line;
-//
-//            while ((line = br.readLine()) != null) {
-//                text.append(line);
-//                text.append('\n');
-//            }
-//            br.close();
-//        } catch (IOException ignored) {
-//        }
-//
-//        return text.toString();
-//    }
-
-//    public static void iniLogFile() {
-//        java.io.File root = new java.io.File(Environment.getExternalStorageDirectory(), "Demo Log");
-//        if (!root.exists()) {
-//            root.mkdirs();
-//        }
-//        java.io.File file = new java.io.File(root, "test_log.txt");
-//
-//        FileOutputStream fOut = null;
-//        try {
-//            fOut = new FileOutputStream(file);
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        }
-//        Consts.out = new OutputStreamWriter(fOut);
-//    }
-
     public static String convertedTime(long time) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd | HH:mm:ss", Locale.getDefault());
 //        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
         return dateFormat.format(new Date(time));
+    }
+
+    public static String setAlarm(Context context, int hour, int minute) {
+        Calendar calendar = Calendar.getInstance(Locale.getDefault());
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+            calendar.set(Calendar.DAY_OF_MONTH, calendar.get(Calendar.DAY_OF_MONTH) + 1);
+        }
+
+        Intent intent = new Intent(context, TaskReceiver.class);
+        PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        am.setAlarmClock(new AlarmManager.AlarmClockInfo(calendar.getTimeInMillis(), pi), pi);
+
+        String time = DateFormat.format("hh:mm aa", calendar).toString();
+        Log.v(time, time);
+        return time;
     }
 }

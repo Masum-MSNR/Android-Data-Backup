@@ -23,7 +23,6 @@ import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -64,7 +63,6 @@ public class GoogleDriveServiceHelper {
                         .setSpaces("drive")
                         .execute();
             } catch (IOException e) {
-                Functions.saveLog(Consts.out, e.toString() + "line 68");
             }
             String folderId = "";
 
@@ -72,7 +70,6 @@ public class GoogleDriveServiceHelper {
                 for (File file : result.getFiles()) {
                     if (file.getName().equals(folderName)) {
                         folderId = file.getId();
-                        Functions.saveLog(Consts.out, folderName + " already present.[Folder]" + "line 68");
                         break;
                     }
                 }
@@ -103,7 +100,6 @@ public class GoogleDriveServiceHelper {
                         .setSpaces("drive")
                         .execute();
             } catch (IOException e) {
-                Functions.saveLog(Consts.out, e.toString() + "line 98");
             }
 
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
@@ -112,7 +108,6 @@ public class GoogleDriveServiceHelper {
                 for (File file : fileList.getFiles()) {
                     if (file.getName().equals(tempFile.getName()) && convertedDateTime(tempFile.lastModified()).equals(file.getModifiedTime().toString())) {
                         result = true;
-                        Functions.saveLog(Consts.out, file.getName() + " already present.[File]" + "line 107");
                         break;
                     }
                 }
@@ -144,7 +139,6 @@ public class GoogleDriveServiceHelper {
                 newFolder = drive.files().create(metadata).execute();
                 id = newFolder.getId() != null ? newFolder.getId() : "";
             } catch (IOException e) {
-                Functions.saveLog(Consts.out, e.toString() + "line 136");
                 id = "";
             }
 
@@ -178,7 +172,6 @@ public class GoogleDriveServiceHelper {
                 file = drive.files().create(fileMetadata, mediaContent)
                         .setFields("id, name, modifiedTime")
                         .execute();
-                Functions.saveLog(Consts.out, file.getId() + " uploaded successfully." + "line 170");
                 result = true;
             } catch (IOException e) {
                 int file_size = Integer.parseInt(String.valueOf(tempFile.length()));
@@ -194,7 +187,6 @@ public class GoogleDriveServiceHelper {
 
                 Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + tempFile.getPath() + " (" + file_size + bkm + ")" + "f");
 
-                Functions.saveLog(Consts.out, e.toString() + "line 173");
                 result = false;
             }
 
@@ -216,7 +208,6 @@ public class GoogleDriveServiceHelper {
                                     uploadFolderInside(root, folderId, fileCount, animation, p);
                                 })
                                 .addOnFailureListener(e -> {
-                                    Functions.saveLog(Consts.out, e.toString() + "line 193");
                                     Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is failed to create." + "f");
                                 });
                     } else {
@@ -224,7 +215,8 @@ public class GoogleDriveServiceHelper {
                     }
 
                 })
-                .addOnFailureListener(e -> Functions.saveLog(Consts.out, e.toString() + "line 199"));
+                .addOnFailureListener(e -> {
+                });
     }
 
     private void uploadFolderInside(java.io.File root, String id, int fileCount, Animation animation, int p) {
@@ -278,7 +270,6 @@ public class GoogleDriveServiceHelper {
             }
             SharedPreferences.Editor editor = context.getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE).edit();
             Consts.LAST_SYNC_TIME.setValue(convertedTime(System.currentTimeMillis()));
-            Functions.saveLog(Consts.out, "Synced successful.\n" + Consts.LAST_SYNC_TIME.getValue() + "\n");
             editor.putString("last_sync_time", Consts.LAST_SYNC_TIME.getValue());
             editor.apply();
         }
@@ -302,10 +293,6 @@ public class GoogleDriveServiceHelper {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         return dateFormat.format(new Date(time));
-    }
-
-    public void saveLog(OutputStreamWriter out, String newLog) {
-        Functions.saveLog(out, newLog);
     }
 
 }

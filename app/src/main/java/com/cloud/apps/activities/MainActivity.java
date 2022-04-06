@@ -55,8 +55,6 @@ public class MainActivity extends AppCompatActivity {
     private void checkPermission() {
         if (!PermissionHandler.checkForPermission(this, permissions)) {
             PermissionHandler.requestPermission(this, permissions, 100);
-        } else {
-//            Functions.iniLogFile();
         }
     }
 
@@ -65,8 +63,6 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 100 && grantResults.length == 2 && grantResults[0] == -1 || grantResults[1] == -1) {
             onBackPressed();
-        } else {
-//            Functions.iniLogFile();
         }
     }
 
