@@ -8,8 +8,10 @@ import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+
 
 import com.cloud.apps.utils.Functions;
 
@@ -20,11 +22,13 @@ import java.util.Date;
 import java.util.Locale;
 
 public class App extends Application {
+
     @Override
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
         setAlarm();
+
     }
 
     private void setAlarm() {
@@ -59,4 +63,5 @@ public class App extends Application {
             manager.createNotificationChannel(channel);
         }
     }
+
 }

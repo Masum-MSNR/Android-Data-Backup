@@ -73,4 +73,22 @@ public class Functions {
         Log.v(time, time);
         return time;
     }
+
+    public static String getSize(long size) {
+        long nSize = size;
+        String bkm = "B";
+        if (nSize >= 1024) {
+            nSize = Integer.parseInt(String.valueOf(nSize / 1024));
+            bkm = "KB";
+        }
+        if (nSize >= 1024) {
+            nSize = Integer.parseInt(String.valueOf(nSize / 1024));
+            bkm = "MB";
+        }
+        if (nSize >= 1024) {
+            nSize = Integer.parseInt(String.valueOf(nSize / 1024));
+            bkm = "GB";
+        }
+        return nSize + bkm;
+    }
 }
