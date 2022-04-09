@@ -32,8 +32,10 @@ public class FilesRepo {
         downloadedFileNames.clear();
         File root = new File(DOWNLOAD_PATH);
         File[] files = root.listFiles();
-        for (File file : files) {
-            downloadedFileNames.add(file.getName());
+        if(files!=null){
+            for (File file : files) {
+                downloadedFileNames.add(file.getName());
+            }
         }
     }
 

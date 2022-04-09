@@ -5,13 +5,13 @@ import static com.cloud.apps.utils.Consts.MY_PREFS_NAME;
 import static com.cloud.apps.utils.Consts.NOTIFICATION_CHANNEL_ID;
 import static com.cloud.apps.utils.Consts.mutableLogSet;
 import static com.cloud.apps.utils.Functions.convertedTime;
-import static com.cloud.apps.utils.Functions.getSize;
 import static com.cloud.apps.utils.Functions.setAlarm;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -19,7 +19,9 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.cloud.apps.R;
 import com.cloud.apps.driveApi.GoogleDriveServiceHelper;
+import com.cloud.apps.models.UploadAbleFile;
 import com.cloud.apps.utils.Functions;
+import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -28,13 +30,16 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Locale;
+import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -47,12 +52,16 @@ public class TaskReceiver extends BroadcastReceiver {
     GoogleDriveServiceHelper driverServiceHelper;
     SharedPreferences.Editor editor;
     Context context;
+    Queue<UploadAbleFile> queue;
+    String token;
+    boolean called = false;
+    boolean uploading = false;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         this.context = context;
         SharedPreferences preferences = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
-        String time = preferences.getString("time", "12:00 AM");
+        String time = preferences.getString("time", "09:00 PM");
         DateFormat h12 = new SimpleDateFormat("hh:mm aa", Locale.getDefault());
         DateFormat h24 = new SimpleDateFormat("HH:mm", Locale.getDefault());
         Date date;
@@ -67,6 +76,7 @@ public class TaskReceiver extends BroadcastReceiver {
 
         if (GoogleSignIn.getLastSignedInAccount(context) == null)
             return;
+        queue = new LinkedList<>();
         TreeSet<String> logSet = new TreeSet<>(context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).getStringSet("logs", new TreeSet<>()));
         mutableLogSet = new MutableLiveData<>(logSet);
 
@@ -81,10 +91,20 @@ public class TaskReceiver extends BroadcastReceiver {
                         credential)
                         .setApplicationName(context.getString(R.string.app_name))
                         .build();
-        driverServiceHelper = new GoogleDriveServiceHelper(context, googleDriveService);
+
+        new Thread(() -> {
+            try {
+                token = credential.getToken();
+            } catch (IOException | GoogleAuthException e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        driverServiceHelper = new GoogleDriveServiceHelper(context, googleDriveService, true);
 
         editor = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
         Set<String> pathSet = new HashSet<>(Functions.getPaths(context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE), "selected_paths"));
+        pathSet.addAll(Functions.getPaths(context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE), "c_selected_paths"));
         for (String path : pathSet) {
             String rootId = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).getString("root_id", "");
             if (rootId.isEmpty())
@@ -94,6 +114,7 @@ public class TaskReceiver extends BroadcastReceiver {
     }
 
     private void uploadFolder(String path, String parentId) {
+        Log.v("Called", path);
         File root = new File(path);
         String folderName = root.getName();
         driverServiceHelper.isFolderPresent(folderName, parentId)
@@ -111,15 +132,8 @@ public class TaskReceiver extends BroadcastReceiver {
                                                 } else {
                                                     driverServiceHelper.isFilePresent(file.getPath(), folderId).addOnSuccessListener(aBoolean -> {
                                                         if (!aBoolean) {
-                                                            driverServiceHelper.uploadFileToGoogleDrive(file.getPath(), folderId).addOnSuccessListener(aBoolean1 -> {
-                                                                if (aBoolean1) {
-                                                                    String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                                                                    Functions.saveNewLog(context, lastSyncedTime + " " + file.getPath() + " (" + getSize(file.length()) + ")" + "3");
-                                                                    editor.putString("last_sync_time", lastSyncedTime);
-                                                                    editor.apply();
-                                                                    showNotification(lastSyncedTime);
-                                                                }
-                                                            });
+                                                            queue.add(new UploadAbleFile(file.getPath(), id, null));
+                                                            check();
                                                         } else {
                                                             String lastSyncedTime = convertedTime(System.currentTimeMillis());
                                                             editor.putString("last_sync_time", lastSyncedTime);
@@ -148,26 +162,8 @@ public class TaskReceiver extends BroadcastReceiver {
                                 } else {
                                     driverServiceHelper.isFilePresent(file.getPath(), id).addOnSuccessListener(aBoolean -> {
                                         if (!aBoolean) {
-                                            driverServiceHelper.uploadFileToGoogleDrive(file.getPath(), id).addOnSuccessListener(aBoolean1 -> {
-                                                if (aBoolean1) {
-                                                    int file_size = Integer.parseInt(String.valueOf(file.length()));
-                                                    String bkm = "B";
-                                                    if (file_size >= 1024) {
-                                                        file_size = Integer.parseInt(String.valueOf(file_size / 1024));
-                                                        bkm = "KB";
-                                                    }
-                                                    if (file_size >= 1024) {
-                                                        file_size = Integer.parseInt(String.valueOf(file_size / 1024));
-                                                        bkm = "MB";
-                                                    }
-
-                                                    String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                                                    Functions.saveNewLog(context, lastSyncedTime + " " + file.getPath() + " (" + file_size + bkm + ")" + "3");
-                                                    editor.putString("last_sync_time", lastSyncedTime);
-                                                    editor.apply();
-                                                    showNotification(lastSyncedTime);
-                                                }
-                                            });
+                                            queue.add(new UploadAbleFile(file.getPath(), id, null));
+                                            check();
                                         } else {
                                             String lastSyncedTime = convertedTime(System.currentTimeMillis());
                                             editor.putString("last_sync_time", lastSyncedTime);
@@ -187,6 +183,49 @@ public class TaskReceiver extends BroadcastReceiver {
                 });
     }
 
+    private void check() {
+        if (!queue.isEmpty() && !uploading) {
+            uploading = true;
+            UploadAbleFile uploadAbleFile = queue.peek();
+            java.io.File tempFile = new java.io.File(uploadAbleFile.getFilePath());
+            driverServiceHelper.isDriveSpaceAvailable(tempFile, token).addOnSuccessListener(integer -> {
+                if (integer == 2) {
+                    driverServiceHelper.uploadFileToGoogleDriveV2(uploadAbleFile).addOnSuccessListener(aBoolean -> {
+                        Log.v("Called", uploadAbleFile.getFilePath());
+                        if (aBoolean) {
+                            queue.remove();
+                        }
+                        uploading = false;
+                        check();
+                        String lastSyncedTime = convertedTime(System.currentTimeMillis());
+                        editor.putString("last_sync_time", lastSyncedTime);
+                        editor.apply();
+                        showNotification(lastSyncedTime);
+                    }).addOnFailureListener(e -> {
+                        uploading = false;
+                        check();
+                        String lastSyncedTime = convertedTime(System.currentTimeMillis());
+                        editor.putString("last_sync_time", lastSyncedTime);
+                        editor.apply();
+                        showNotification(lastSyncedTime);
+                    });
+                } else if (integer == 4 || integer == 1) {
+                    uploading = false;
+                    check();
+                    String lastSyncedTime = convertedTime(System.currentTimeMillis());
+                    editor.putString("last_sync_time", lastSyncedTime);
+                    editor.apply();
+                    showNotification(lastSyncedTime);
+                } else {
+                    showNotification();
+                }
+            }).addOnFailureListener(e -> {
+                uploading = false;
+                check();
+            });
+        }
+    }
+
     private void showNotification(String lastSyncedTime) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_cloudapp)
@@ -197,4 +236,16 @@ public class TaskReceiver extends BroadcastReceiver {
         NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
         m.notify(100, builder.build());
     }
+
+    private void showNotification() {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_cloudapp)
+                .setContentTitle("Google Drive Storage Full")
+                .setContentText("Please make some space.")
+                .setOnlyAlertOnce(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH);
+        NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
+        m.notify(101, builder.build());
+    }
+
 }

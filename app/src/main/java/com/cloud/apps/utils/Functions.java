@@ -108,7 +108,7 @@ public class Functions {
                 long use = Long.parseLong(json.getString("usageInDrive"));
                 long totalSize = 1024 * 1024 * 1024;
                 totalSize *= 15;
-                drivePercentage.setValue((int) ((float) (totalSize - use) / (float) totalSize));
+                drivePercentage.setValue((int) (((float) use / (float) totalSize)*100));
                 driveAvailAbleStorage.setValue(getSize(use) + "/15GB");
             } catch (JSONException e) {
                 e.printStackTrace();

@@ -70,7 +70,7 @@ public class SelectedFolderListActivity extends AppCompatActivity implements Sel
                             credential)
                             .setApplicationName("Drive API Migration")
                             .build();
-            driverServiceHelper = new GoogleDriveServiceHelper(this, googleDriveService);
+            driverServiceHelper = new GoogleDriveServiceHelper(this, googleDriveService, false);
         }
 
         binding.addFab.setOnClickListener(v -> {

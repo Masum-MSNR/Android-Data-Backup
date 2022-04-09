@@ -1,7 +1,10 @@
 package com.cloud.apps.driveApi;
 
+import static android.content.Context.MODE_PRIVATE;
 import static com.cloud.apps.utils.Consts.MY_PREFS_NAME;
+import static com.cloud.apps.utils.Consts.NOTIFICATION_CHANNEL_ID;
 import static com.cloud.apps.utils.Functions.convertedTime;
+import static com.cloud.apps.utils.Functions.getAbout;
 import static com.cloud.apps.utils.Functions.getSize;
 
 import android.content.ContentResolver;
@@ -14,10 +17,25 @@ import android.util.Log;
 import android.view.animation.Animation;
 import android.webkit.MimeTypeMap;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.cloud.apps.R;
 import com.cloud.apps.models.DriveFile;
+import com.cloud.apps.models.RvChildDetails;
+import com.cloud.apps.models.UploadAbleFile;
 import com.cloud.apps.repo.UserRepo;
 import com.cloud.apps.utils.Consts;
 import com.cloud.apps.utils.Functions;
+import com.cloud.apps.utils.VolleySingleton;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.api.client.http.FileContent;
@@ -26,6 +44,9 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,10 +54,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.Locale;
+import java.util.Queue;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class GoogleDriveServiceHelper {
 
@@ -50,11 +75,45 @@ public class GoogleDriveServiceHelper {
     int[] count = new int[100];
 
     UserRepo userRepo;
+    public MutableLiveData<Queue<UploadAbleFile>> mUploadAbleFiles;
+    boolean uploading = false;
 
-    public GoogleDriveServiceHelper(Context context, Drive drive) {
+
+    public GoogleDriveServiceHelper(Context context, Drive drive, boolean background) {
         this.context = context;
         this.drive = drive;
         userRepo = UserRepo.getInstance(context);
+        mUploadAbleFiles = new MutableLiveData<>(new LinkedList<>());
+        if (background)
+            return;
+        mUploadAbleFiles.observe((LifecycleOwner) context, new Observer<Queue<UploadAbleFile>>() {
+            @Override
+            public void onChanged(Queue<UploadAbleFile> uploadAbleFiles) {
+                if (!uploadAbleFiles.isEmpty() && !uploading) {
+                    uploading = true;
+                    UploadAbleFile uploadAbleFile = uploadAbleFiles.peek();
+                    java.io.File tempFile = new java.io.File(uploadAbleFile.getFilePath());
+                    isDriveSpaceAvailable(tempFile,userRepo.getToken()).addOnSuccessListener(new OnSuccessListener<Integer>() {
+                        @Override
+                        public void onSuccess(Integer integer) {
+                            if (integer == 2) {
+                                uploadFileToGoogleDriveV1(uploadAbleFiles.peek());
+                            } else if (integer == 3) {
+                                showNotification();
+                            }
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + tempFile.getPath() + " (" + getSize(tempFile.length()) + ")" + "4");
+                            uploading = false;
+                            uploadAbleFiles.add(uploadAbleFiles.remove());
+                            mUploadAbleFiles.postValue(uploadAbleFiles);
+                        }
+                    });
+                }
+            }
+        });
     }
 
     /**
@@ -160,36 +219,95 @@ public class GoogleDriveServiceHelper {
     /**
      * Uploads file to google drive.
      */
-    public Task<Boolean> uploadFileToGoogleDrive(String filePath, String folderId) {
+    public Task<Boolean> uploadFileToGoogleDriveV1(UploadAbleFile file) {
         final TaskCompletionSource<Boolean> tcs = new TaskCompletionSource<>();
-        ExecutorService service = Executors.newFixedThreadPool(1);
+        ExecutorService service = Executors.newFixedThreadPool(19);
+
+        AtomicBoolean aResult = new AtomicBoolean(false);
 
         service.execute(() -> {
-            java.io.File tempFile = new java.io.File(filePath);
-
+            java.io.File tempFile = new java.io.File(file.getFilePath());
+            Log.v(tempFile.getName(), tempFile.length() + "");
             File fileMetadata = new File();
             fileMetadata.setName(tempFile.getName());
-            fileMetadata.setParents(Collections.singletonList(folderId));
+            fileMetadata.setParents(Collections.singletonList(file.getFolderId()));
             fileMetadata.setMimeType(getMimeType(Uri.fromFile(tempFile)));
             fileMetadata.setModifiedTime(new DateTime(tempFile.lastModified()));
 
             FileContent mediaContent = new FileContent(getMimeType(Uri.fromFile(tempFile)), tempFile);
 
-            File file;
-            boolean result;
             try {
-                file = drive.files().create(fileMetadata, mediaContent)
+                drive.files().create(fileMetadata, mediaContent)
                         .setFields("id, name, modifiedTime")
                         .execute();
-                result = true;
+                aResult.set(true);
+                count[file.getDetails().getP()]++;
+                terminator(file.getDetails().getCount(), file.getDetails().getP(), file.getDetails().getAnimation());
+                getAbout(context, userRepo.getToken());
+                Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + tempFile.getPath() + " (" + getSize(tempFile.length()) + ")" + "3");
+                uploading = false;
+                Queue<UploadAbleFile> queue = new LinkedList<>(mUploadAbleFiles.getValue());
+                queue.remove();
+                mUploadAbleFiles.postValue(queue);
             } catch (IOException e) {
+                e.printStackTrace();
                 Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + tempFile.getPath() + " (" + getSize(tempFile.length()) + ")" + "4");
-                result = false;
+                aResult.set(false);
+                uploading = false;
+                Queue<UploadAbleFile> queue = new LinkedList<>(mUploadAbleFiles.getValue());
+                queue.add(queue.remove());
+                mUploadAbleFiles.postValue(queue);
             }
 
-            boolean finalResult = result;
-            new Handler(Looper.getMainLooper()).postDelayed(() -> tcs.setResult(finalResult), 1000);
+            new Handler(Looper.getMainLooper()).postDelayed(() -> tcs.setResult(aResult.get()), 1000);
         });
+
+        return tcs.getTask();
+    }
+
+    public Task<Boolean> uploadFileToGoogleDriveV2(UploadAbleFile file) {
+        Log.v("size", "hoi");
+
+        final TaskCompletionSource<Boolean> tcs = new TaskCompletionSource<>();
+        ExecutorService service = Executors.newFixedThreadPool(29);
+
+        AtomicBoolean aResult = new AtomicBoolean(false);
+
+        service.execute(() -> {
+            java.io.File tempFile = new java.io.File(file.getFilePath());
+            Log.v(tempFile.getName(), tempFile.length() + "");
+            File fileMetadata = new File();
+            fileMetadata.setName(tempFile.getName());
+            fileMetadata.setParents(Collections.singletonList(file.getFolderId()));
+            fileMetadata.setMimeType(getMimeType(Uri.fromFile(tempFile)));
+            fileMetadata.setModifiedTime(new DateTime(tempFile.lastModified()));
+
+            FileContent mediaContent = new FileContent(getMimeType(Uri.fromFile(tempFile)), tempFile);
+
+            try {
+                drive.files().create(fileMetadata, mediaContent)
+                        .setFields("id, name, modifiedTime")
+                        .execute();
+                aResult.set(true);
+                Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + tempFile.getPath() + " (" + getSize(tempFile.length()) + ")" + "3");
+                String lastSyncedTime = convertedTime(System.currentTimeMillis());
+                SharedPreferences.Editor editor = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
+                editor.putString("last_sync_time", lastSyncedTime);
+                editor.apply();
+                showNotification(lastSyncedTime);
+            } catch (IOException e) {
+                Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + tempFile.getPath() + " (" + getSize(tempFile.length()) + ")" + "4");
+                aResult.set(false);
+                String lastSyncedTime = convertedTime(System.currentTimeMillis());
+                SharedPreferences.Editor editor = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
+                editor.putString("last_sync_time", lastSyncedTime);
+                editor.apply();
+                showNotification(lastSyncedTime);
+            }
+
+            new Handler(Looper.getMainLooper()).postDelayed(() -> tcs.setResult(aResult.get()), 1000);
+        });
+
         return tcs.getTask();
     }
 
@@ -205,8 +323,9 @@ public class GoogleDriveServiceHelper {
             FileList fileList = null;
             try {
                 fileList = drive.files().list()
-                        .setQ("trashed=false and parents='" + folderId + "'")
-                        .setFields("files(id, name, modifiedTime,mimeType)")
+//                        .setQ("trashed=false and parents='" + folderId + "'")
+                        .setQ("trashed=false")
+                        .setFields("files(id, name, mimeType,parents)")
                         .setSpaces("drive")
                         .execute();
 
@@ -216,9 +335,10 @@ public class GoogleDriveServiceHelper {
 
             if (fileList != null) {
                 for (File file : fileList.getFiles()) {
-                    files.add(new DriveFile(file.getName(), file.getId(), folderDetector(file.getMimeType())));
+                    files.add(new DriveFile(file.getName(), file.getId(), file.getParents().get(0), folderDetector(file.getMimeType())));
                 }
             }
+
             new Handler(Looper.getMainLooper()).postDelayed(() -> tcs.setResult(files), 1000);
 
         });
@@ -250,6 +370,48 @@ public class GoogleDriveServiceHelper {
             boolean finalResult = result;
             new Handler(Looper.getMainLooper()).postDelayed(() -> tcs.setResult(finalResult), 1000);
 
+        });
+
+        return tcs.getTask();
+    }
+
+    /**
+     * Checks space available for individual file
+     */
+    public Task<Integer> isDriveSpaceAvailable(java.io.File file,String token) {
+        final TaskCompletionSource<Integer> tcs = new TaskCompletionSource<>();
+        ExecutorService service = Executors.newFixedThreadPool(69);
+        String url = "https://www.googleapis.com/drive/v3/about?fields=storageQuota&access_token=" + token;
+        AtomicInteger ai = new AtomicInteger(1);
+        service.execute(() -> {
+            StringRequest stringRequest = new StringRequest(Request.Method.GET, url, response -> {
+                try {
+                    JSONObject json = new JSONObject(response);
+                    json = new JSONObject(json.getString("storageQuota"));
+                    long use = Long.parseLong(json.getString("usageInDrive"));
+                    long limit = Long.parseLong(json.getString("limit"));
+                    if ((limit - use) > file.length()){
+                        Log.v("asdasdasd", "out");
+                        ai.set(2);
+                    }
+                    else{
+                        Log.v("asdasdasd", "out");
+                        ai.set(3);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }, error -> {
+                ai.set(4);
+                uploading = false;
+                Queue<UploadAbleFile> queue = new LinkedList<>(mUploadAbleFiles.getValue());
+                queue.add(queue.remove());
+                mUploadAbleFiles.postValue(queue);
+                Log.e("Error", error.toString());
+            });
+            VolleySingleton.getInstance(context).addToRequestQueue(context, stringRequest);
+
+            new Handler(Looper.getMainLooper()).postDelayed(() -> tcs.setResult(ai.get()), 1000);
         });
 
         return tcs.getTask();
@@ -287,13 +449,9 @@ public class GoogleDriveServiceHelper {
                 } else {
                     isFilePresent(file.getPath(), id).addOnSuccessListener(aBoolean -> {
                         if (!aBoolean) {
-                            uploadFileToGoogleDrive(file.getPath(), id).addOnSuccessListener(aBoolean1 -> {
-                                if (aBoolean1) {
-                                    Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + file.getPath() + " (" + getSize(file.length()) + ")" + "3");
-                                    count[p]++;
-                                    terminator(fileCount, p, animation);
-                                }
-                            });
+                            Queue<UploadAbleFile> queue = new LinkedList<>(mUploadAbleFiles.getValue());
+                            queue.add(new UploadAbleFile(file.getPath(), id, new RvChildDetails(p, fileCount, animation)));
+                            mUploadAbleFiles.setValue(queue);
                         } else {
                             count[p]++;
                             terminator(fileCount, p, animation);
@@ -317,7 +475,7 @@ public class GoogleDriveServiceHelper {
                 }
             }
             SharedPreferences.Editor editor = context.getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE).edit();
-            Consts.LAST_SYNC_TIME.setValue(convertedTime(System.currentTimeMillis()));
+            Consts.LAST_SYNC_TIME.postValue(convertedTime(System.currentTimeMillis()));
             editor.putString("last_sync_time", Consts.LAST_SYNC_TIME.getValue());
             editor.apply();
         }
@@ -343,4 +501,25 @@ public class GoogleDriveServiceHelper {
         return dateFormat.format(new Date(time));
     }
 
+    private void showNotification() {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_cloudapp)
+                .setContentTitle("Google Drive Storage Full")
+                .setContentText("Please make some space.")
+                .setOnlyAlertOnce(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH);
+        NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
+        m.notify(101, builder.build());
+    }
+
+    private void showNotification(String lastSyncedTime) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_cloudapp)
+                .setContentTitle("Last synced")
+                .setContentText(lastSyncedTime)
+                .setOnlyAlertOnce(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH);
+        NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
+        m.notify(100, builder.build());
+    }
 }

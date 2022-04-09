@@ -19,7 +19,7 @@ public class OnBootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         SharedPreferences preferences = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
-        String time = preferences.getString("time", "12:00 AM");
+        String time = preferences.getString("time", "09:00 PM");
         DateFormat h12 = new SimpleDateFormat("hh:mm aa", Locale.getDefault());
         DateFormat h24 = new SimpleDateFormat("HH:mm", Locale.getDefault());
         Date date;

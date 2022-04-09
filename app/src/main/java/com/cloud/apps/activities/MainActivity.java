@@ -3,12 +3,13 @@ package com.cloud.apps.activities;
 import static com.cloud.apps.utils.Consts.APP_PATH;
 import static com.cloud.apps.utils.Consts.DOWNLOAD_PATH;
 import static com.cloud.apps.utils.Consts.MY_PREFS_NAME;
-import static com.cloud.apps.utils.Consts.previousId;
 import static com.cloud.apps.utils.Consts.folderTrack;
 import static com.cloud.apps.utils.Consts.mutableLogSet;
+import static com.cloud.apps.utils.Consts.previousId;
 import static com.cloud.apps.utils.Functions.getAbout;
 
 import android.Manifest;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -100,11 +101,14 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         getAbout(this, credential.getToken());
                         userRepo.setToken(credential.getToken());
+                        SharedPreferences.Editor editor=getSharedPreferences(MY_PREFS_NAME,MODE_PRIVATE).edit();
+                        editor.putString("token",credential.getToken());
+                        editor.apply();
                     } catch (IOException | GoogleAuthException e) {
                         e.printStackTrace();
                     }
                 }).start();
-                userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService));
+                userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService,false));
             }
         }
     }
@@ -114,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 100 && grantResults.length == 2 && grantResults[0] == -1 || grantResults[1] == -1) {
             onBackPressed();
-        }else {
+        } else {
             isFolderExits();
             filesRepo = FilesRepo.getInstance();
         }
@@ -157,6 +161,9 @@ public class MainActivity extends AppCompatActivity {
                 previousId.setValue(folderTrack.pop());
                 return;
             }
+            binding.bottomNavigation.setSelectedItemId(R.id.dashboard);
+            navMenuId = R.id.dashboard;
+        } else {
             binding.bottomNavigation.setSelectedItemId(R.id.dashboard);
             navMenuId = R.id.dashboard;
         }

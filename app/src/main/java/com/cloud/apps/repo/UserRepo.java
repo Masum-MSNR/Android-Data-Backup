@@ -49,7 +49,6 @@ public class UserRepo {
 
     public void setToken(String token) {
         this.token = token;
-        Log.v("toker", token);
     }
 
     public String getRootFolderId() {

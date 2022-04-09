@@ -103,10 +103,10 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
         binding.indicator.setProgressCompat(percentage, true);
         binding.percentTv.setText(percentage + "%");
 
-        String tempTime = preferences.getString("time", "12:00 AM");
+        String tempTime = preferences.getString("time", "09:00 PM");
         binding.timeTv.setText(tempTime);
 
-        if(userRepo.getLogin().getValue()&&userRepo.getRootFolderId()==null)
+        if (userRepo.getLogin().getValue() && userRepo.getRootFolderId() == null)
             checkRootFolder();
 
         //listeners
@@ -189,7 +189,7 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
                 e.printStackTrace();
             }
         }).start();
-        userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService));
+        userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService, false));
         userRepo.getLogin().setValue(true);
         isConnecting.setValue(true);
 
@@ -247,11 +247,13 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
                     new Thread(() -> {
                         try {
                             getAbout(ConnectivityActivity.this, credential.getToken());
+                            userRepo.setToken(credential.getToken());
+                            editor.putString("token", credential.getToken()).apply();
                         } catch (IOException | GoogleAuthException e) {
                             e.printStackTrace();
                         }
                     }).start();
-                    userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService));
+                    userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService, false));
                     userRepo.getLogin().setValue(true);
                     isConnecting.setValue(true);
                     checkRootFolder();
@@ -282,4 +284,6 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
         SelectFolderDialog dialog = new SelectFolderDialog(this, this, 1);
         dialog.show(getSupportFragmentManager(), dialog.getTag());
     }
+
+
 }

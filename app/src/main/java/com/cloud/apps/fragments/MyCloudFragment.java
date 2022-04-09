@@ -38,6 +38,8 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
     MutableLiveData<Boolean> isConnecting;
     DriveFolderFileAdapter adapter;
     ArrayList<DriveFile> files;
+    ArrayList<DriveFile> tempDriveFiles;
+
     String currentId;
 
     public MyCloudFragment(Context context) {
@@ -45,6 +47,7 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
         userRepo = UserRepo.getInstance(context);
         isConnecting = new MutableLiveData<>(false);
         files = new ArrayList<>();
+        tempDriveFiles = new ArrayList<>();
     }
 
     @Override
@@ -53,7 +56,7 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
         binding = FragmentMyCloudBinding.inflate(getLayoutInflater());
 
 
-        adapter = new DriveFolderFileAdapter(context, files, this, true);
+        adapter = new DriveFolderFileAdapter(context, tempDriveFiles, this, true);
         binding.driveFilesRv.setLayoutManager(new LinearLayoutManager(context));
         binding.driveFilesRv.setAdapter(adapter);
         //listeners
@@ -62,7 +65,8 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
             if (s.isEmpty()) {
                 return;
             }
-            loadDriveFiles(s);
+            currentId = s;
+            loadRv(s);
         });
 
         isConnecting.observe((LifecycleOwner) context, aBoolean -> {
@@ -91,9 +95,19 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
             binding.notifier.setText(driveFiles.size() == 0 ? "Empty" : "");
             binding.notifier.setVisibility(driveFiles.size() == 0 ? View.VISIBLE : View.INVISIBLE);
             files.addAll(driveFiles);
-            binding.centerPb.setVisibility(View.INVISIBLE);
-            adapter.notifyDataSetChanged();
+            loadRv(id);
         });
+    }
+
+    private void loadRv(String id) {
+        tempDriveFiles.clear();
+        for (DriveFile f : files) {
+            if (f.getParent().equals(id)) {
+                tempDriveFiles.add(f);
+            }
+        }
+        binding.centerPb.setVisibility(View.INVISIBLE);
+        adapter.notifyDataSetChanged();
     }
 
 
@@ -127,7 +141,7 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
                         binding.tryAgainBt.setVisibility(View.VISIBLE);
                         binding.progressBar.setVisibility(View.GONE);
                         binding.progressFrame.setVisibility(View.GONE);
-                        Toast.makeText(context, "Something went wrong! Please try again.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context,"Something went wrong! Please try again.", Toast.LENGTH_SHORT).show();
                     }
                 });
             } else {
@@ -143,7 +157,7 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
     public void onClick(String id) {
         folderTrack.push(currentId);
         currentId = id;
-        loadDriveFiles(id);
+        loadRv(id);
     }
 
     @Override

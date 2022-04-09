@@ -1,15 +1,16 @@
 package com.cloud.apps.models;
 
 public class DriveFile {
-    String name, id;
+    String name, id,parent;
     boolean folder;
 
     public DriveFile() {
     }
 
-    public DriveFile(String name, String id, boolean folder) {
+    public DriveFile(String name, String id, String parent, boolean folder) {
         this.name = name;
         this.id = id;
+        this.parent = parent;
         this.folder = folder;
     }
 
@@ -27,6 +28,14 @@ public class DriveFile {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getParent() {
+        return parent;
+    }
+
+    public void setParent(String parent) {
+        this.parent = parent;
     }
 
     public boolean isFolder() {
