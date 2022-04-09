@@ -95,7 +95,7 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
         binding.blockFolderRv.setLayoutManager(new GridLayoutManager(this, 4, GridLayoutManager.VERTICAL, false));
         binding.blockFolderRv.setAdapter(adapter);
 
-        String storage = getSize(viewModel.getFreeStorage()) + "/" + getSize(viewModel.getTotalStorage());
+        String storage = getSize(viewModel.getTotalStorage() - viewModel.getFreeStorage()) + "/" + getSize(viewModel.getTotalStorage());
 
         binding.availableStorageTv.setText(storage);
 

@@ -266,7 +266,6 @@ public class GoogleDriveServiceHelper {
     }
 
     public Task<Boolean> uploadFileToGoogleDriveV2(UploadAbleFile file) {
-        Log.v("size", "hoi");
 
         final TaskCompletionSource<Boolean> tcs = new TaskCompletionSource<>();
         ExecutorService service = Executors.newFixedThreadPool(29);

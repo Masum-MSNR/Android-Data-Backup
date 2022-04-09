@@ -2,6 +2,7 @@ package com.cloud.apps.activities;
 
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -9,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.cloud.apps.adapters.FileAdapter;
 import com.cloud.apps.databinding.ActivitySpeceficFileBinding;
+import com.cloud.apps.dialogs.LoadingDialog;
 import com.cloud.apps.models.SingleFile;
 import com.cloud.apps.viewModels.SpecificFileActivityViewModel;
 
@@ -24,6 +26,8 @@ public class SpecificFileActivity extends AppCompatActivity {
     ArrayList<SingleFile> files;
     FileAdapter adapter;
 
+    LoadingDialog loadingDialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,38 +36,49 @@ public class SpecificFileActivity extends AppCompatActivity {
         viewModel = new ViewModelProvider(this).get(SpecificFileActivityViewModel.class);
         viewModel.init();
         type = getIntent().getStringExtra("type");
-//        type = "image";
         getSupportActionBar().setTitle(type);
 
         files = new ArrayList<>();
+        loadingDialog = new LoadingDialog();
+        loadingDialog.show(getSupportFragmentManager(), loadingDialog.getTag());
         adapter = new FileAdapter(this, files, type);
         binding.filesRv.setLayoutManager(new LinearLayoutManager(this));
         binding.filesRv.setAdapter(adapter);
 
-        switch (type) {
-            case "image":
-                viewModel.refresh();
-                files.addAll(viewModel.loadImages(Environment.getExternalStorageDirectory().getPath()));
-                adapter.notifyItemRangeChanged(0, files.size());
-                break;
-            case "video":
-                viewModel.refresh();
-                files.addAll(viewModel.loadVideos(Environment.getExternalStorageDirectory().getPath()));
-                adapter.notifyItemRangeChanged(0, files.size());
-                break;
-            case "document":
-                viewModel.refresh();
-                files.addAll(viewModel.loadDocuments(Environment.getExternalStorageDirectory().getPath()));
-                adapter.notifyItemRangeChanged(0, files.size());
-                break;
-            case "audio":
-                viewModel.refresh();
-                files.addAll(viewModel.loadAudios(Environment.getExternalStorageDirectory().getPath()));
-                adapter.notifyItemRangeChanged(0, files.size());
-                break;
-            default:
-                finish();
-        }
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                switch (type) {
+                    case "image":
+                        viewModel.refresh();
+                        files.addAll(viewModel.loadImages(Environment.getExternalStorageDirectory().getPath()));
+                        adapter.notifyItemRangeChanged(0, files.size());
+                        loadingDialog.dismiss();
+                        break;
+                    case "video":
+                        viewModel.refresh();
+                        files.addAll(viewModel.loadVideos(Environment.getExternalStorageDirectory().getPath()));
+                        adapter.notifyItemRangeChanged(0, files.size());
+                        loadingDialog.dismiss();
+                        break;
+                    case "document":
+                        viewModel.refresh();
+                        files.addAll(viewModel.loadDocuments(Environment.getExternalStorageDirectory().getPath()));
+                        adapter.notifyItemRangeChanged(0, files.size());
+                        loadingDialog.dismiss();
+                        break;
+                    case "audio":
+                        viewModel.refresh();
+                        files.addAll(viewModel.loadAudios(Environment.getExternalStorageDirectory().getPath()));
+                        adapter.notifyItemRangeChanged(0, files.size());
+                        loadingDialog.dismiss();
+                        break;
+                    default:
+                        finish();
+                }
+            }
+        }, 500);
     }
 
 
