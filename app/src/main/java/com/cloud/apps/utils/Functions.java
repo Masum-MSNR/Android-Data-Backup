@@ -1,6 +1,8 @@
 package com.cloud.apps.utils;
 
 import static com.cloud.apps.utils.Consts.MY_PREFS_NAME;
+import static com.cloud.apps.utils.Consts.driveAvailAbleStorage;
+import static com.cloud.apps.utils.Consts.drivePercentage;
 import static com.cloud.apps.utils.Consts.mutableLogSet;
 
 import android.app.AlarmManager;
@@ -11,7 +13,12 @@ import android.content.SharedPreferences;
 import android.text.format.DateFormat;
 import android.util.Log;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
 import com.cloud.apps.broadcastReceivers.TaskReceiver;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -90,5 +97,25 @@ public class Functions {
             bkm = "GB";
         }
         return nSize + bkm;
+    }
+
+    public static void getAbout(Context context, String token) {
+        String url = "https://www.googleapis.com/drive/v3/about?fields=storageQuota&access_token=" + token;
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, response -> {
+            try {
+                JSONObject json = new JSONObject(response);
+                json = new JSONObject(json.getString("storageQuota"));
+                long use = Long.parseLong(json.getString("usageInDrive"));
+                long totalSize = 1024 * 1024 * 1024;
+                totalSize *= 15;
+                drivePercentage.setValue((int) ((float) (totalSize - use) / (float) totalSize));
+                driveAvailAbleStorage.setValue(getSize(use) + "/15GB");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }, error -> {
+            Log.e("Error", error.toString());
+        });
+        VolleySingleton.getInstance(context).addToRequestQueue(context, stringRequest);
     }
 }

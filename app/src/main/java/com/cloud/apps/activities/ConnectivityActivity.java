@@ -2,7 +2,9 @@ package com.cloud.apps.activities;
 
 import static com.cloud.apps.utils.Consts.GLOBAL_KEY;
 import static com.cloud.apps.utils.Consts.MY_PREFS_NAME;
-import static com.cloud.apps.utils.Consts.ROOT_KEY;
+import static com.cloud.apps.utils.Consts.driveAvailAbleStorage;
+import static com.cloud.apps.utils.Consts.drivePercentage;
+import static com.cloud.apps.utils.Functions.getAbout;
 import static com.cloud.apps.utils.Functions.getSize;
 import static com.cloud.apps.utils.Functions.setAlarm;
 import static com.cloud.apps.utils.Functions.setRootId;
@@ -23,10 +25,11 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.cloud.apps.R;
-import com.cloud.apps.adapters.FolderBlockAdapter;
+import com.cloud.apps.adapters.BlockFolderAdapter;
 import com.cloud.apps.databinding.ActivityConnectivityBinding;
 import com.cloud.apps.dialogs.SelectFolderDialog;
 import com.cloud.apps.driveApi.GoogleDriveServiceHelper;
+import com.cloud.apps.repo.UserRepo;
 import com.cloud.apps.utils.Consts;
 import com.cloud.apps.utils.Functions;
 import com.cloud.apps.viewModels.ConnectivityActivityViewModel;
@@ -48,26 +51,26 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-public class ConnectivityActivity extends AppCompatActivity implements SelectFolderDialog.SelectListener {
+public class ConnectivityActivity extends AppCompatActivity implements SelectFolderDialog.SelectListener, BlockFolderAdapter.OnPlusClick {
 
     private static final String TAG = "ConnectivityActivity";
 
     ActivityConnectivityBinding binding;
     ConnectivityActivityViewModel viewModel;
 
-    GoogleDriveServiceHelper driverServiceHelper;
     GoogleSignInClient googleSignInClient;
 
     ActivityResultLauncher<Intent> launcher;
 
-    MutableLiveData<Boolean> isLoggedIn;
     MutableLiveData<Boolean> isConnecting;
 
     TimePickerDialog timePickerDialog;
     SharedPreferences preferences;
     SharedPreferences.Editor editor;
-    FolderBlockAdapter adapter;
+    BlockFolderAdapter adapter;
     ArrayList<String> folderNames;
+
+    UserRepo userRepo;
 
 
     @Override
@@ -77,18 +80,18 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
         setContentView(binding.getRoot());
         viewModel = new ViewModelProvider(this).get(ConnectivityActivityViewModel.class);
         viewModel.init();
+        userRepo = UserRepo.getInstance(this);
 
         getSupportActionBar().setTitle("Connectivity");
 
         folderNames = new ArrayList<>();
-        isLoggedIn = new MutableLiveData<>(GoogleSignIn.getLastSignedInAccount(this) != null);
         isConnecting = new MutableLiveData<>(false);
         launcher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> handleSignInResult(result.getData()));
 
         preferences = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
         editor = preferences.edit();
 
-        adapter = new FolderBlockAdapter(this, folderNames);
+        adapter = new BlockFolderAdapter(this, folderNames, this);
         binding.blockFolderRv.setLayoutManager(new GridLayoutManager(this, 4, GridLayoutManager.VERTICAL, false));
         binding.blockFolderRv.setAdapter(adapter);
 
@@ -103,7 +106,8 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
         String tempTime = preferences.getString("time", "12:00 AM");
         binding.timeTv.setText(tempTime);
 
-        checkLogin();
+        if(userRepo.getLogin().getValue()&&userRepo.getRootFolderId()==null)
+            checkRootFolder();
 
         //listeners
         Consts.LAST_SYNC_TIME.observe(this, s -> {
@@ -121,13 +125,13 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
             timePickerDialog.show();
         });
 
-        viewModel.getDriveAvailAbleStorage().observe(this, s -> {
+        driveAvailAbleStorage.observe(this, s -> {
             binding.driveAvailableStorageTv.setText(s);
-            binding.drivePercentTv.setText(viewModel.getDrivePercentage() + "%");
-            binding.driveStorageIndicator.setProgressCompat(viewModel.getDrivePercentage(), true);
+            binding.drivePercentTv.setText(drivePercentage.getValue() + "%");
+            binding.driveStorageIndicator.setProgressCompat(drivePercentage.getValue(), true);
         });
 
-        isLoggedIn.observe(this, aBoolean -> {
+        userRepo.getLogin().observe(this, aBoolean -> {
             binding.connectedTv.setVisibility(aBoolean ? View.VISIBLE : View.INVISIBLE);
             binding.connectToGoogleBt.setVisibility(aBoolean ? View.INVISIBLE : View.VISIBLE);
         });
@@ -135,8 +139,8 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
         isConnecting.observe(this, aBoolean -> {
             binding.progressBar.setVisibility(aBoolean ? View.VISIBLE : View.GONE);
             binding.progressFrame.setVisibility(aBoolean ? View.VISIBLE : View.GONE);
-            binding.pickFolderBt.setEnabled(!aBoolean && isLoggedIn.getValue());
-            binding.selectedFoldersBt.setEnabled(!aBoolean && isLoggedIn.getValue());
+            binding.pickFolderBt.setEnabled(!aBoolean && userRepo.getLogin().getValue());
+            binding.selectedFoldersBt.setEnabled(!aBoolean && userRepo.getLogin().getValue());
         });
 
         binding.tryAgainBt.setOnClickListener(v -> {
@@ -148,7 +152,7 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
         binding.connectToGoogleBt.setOnClickListener(v -> requestSignIn());
 
         binding.pickFolderBt.setOnClickListener(v -> {
-            SelectFolderDialog dialog = new SelectFolderDialog(this, this);
+            SelectFolderDialog dialog = new SelectFolderDialog(this, this, 0);
             dialog.show(getSupportFragmentManager(), dialog.getTag());
         });
 
@@ -156,42 +160,48 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
             startActivity(new Intent(this, SelectedFolderListActivity.class));
         });
 
+        loadRecyclerView();
+    }
+
+    public void loadRecyclerView() {
+        folderNames.clear();
+        folderNames.addAll(Functions.getPaths(getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE), "c_selected_paths"));
+        Collections.sort(folderNames, (o1, o2) -> o1.toLowerCase().compareTo(o2.toLowerCase()));
+        adapter.notifyItemRangeChanged(0, 4 + folderNames.size() + 1);
     }
 
     private void checkLogin() {
-        if (isLoggedIn.getValue()) {
-            GoogleAccountCredential credential =
-                    GoogleAccountCredential.usingOAuth2(
-                            this, Collections.singleton(DriveScopes.DRIVE_FILE));
-            credential.setSelectedAccount(Objects.requireNonNull(GoogleSignIn.getLastSignedInAccount(this)).getAccount());
-            Drive googleDriveService =
-                    new Drive.Builder(
-                            AndroidHttp.newCompatibleTransport(),
-                            new GsonFactory(),
-                            credential)
-                            .setApplicationName(getString(R.string.app_name))
-                            .build();
-            new Thread(() -> {
-                try {
-                    viewModel.getAbout(ConnectivityActivity.this, credential.getToken());
-                } catch (IOException | GoogleAuthException e) {
-                    e.printStackTrace();
-                }
-            }).start();
-            driverServiceHelper = new GoogleDriveServiceHelper(this, googleDriveService);
-            isLoggedIn.setValue(true);
-            isConnecting.setValue(true);
+        GoogleAccountCredential credential =
+                GoogleAccountCredential.usingOAuth2(
+                        this, Collections.singleton(DriveScopes.DRIVE_FILE));
+        credential.setSelectedAccount(Objects.requireNonNull(GoogleSignIn.getLastSignedInAccount(this)).getAccount());
+        Drive googleDriveService =
+                new Drive.Builder(
+                        AndroidHttp.newCompatibleTransport(),
+                        new GsonFactory(),
+                        credential)
+                        .setApplicationName(getString(R.string.app_name))
+                        .build();
+        new Thread(() -> {
+            try {
+                getAbout(ConnectivityActivity.this, credential.getToken());
+            } catch (IOException | GoogleAuthException e) {
+                e.printStackTrace();
+            }
+        }).start();
+        userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService));
+        userRepo.getLogin().setValue(true);
+        isConnecting.setValue(true);
 
-            checkRootFolder();
-        }
+        checkRootFolder();
     }
 
     private void checkRootFolder() {
-        driverServiceHelper.isFolderPresent(GLOBAL_KEY, "root").addOnSuccessListener(id -> {
+        userRepo.getDriveServiceHelper().isFolderPresent(GLOBAL_KEY, "root").addOnSuccessListener(id -> {
             if (id.isEmpty()) {
-                driverServiceHelper.createNewFolder(GLOBAL_KEY, "root").addOnSuccessListener(rootId -> {
+                userRepo.getDriveServiceHelper().createNewFolder(GLOBAL_KEY, "root").addOnSuccessListener(rootId -> {
                     if (!rootId.isEmpty()) {
-                        ROOT_KEY = rootId;
+                        userRepo.setRootFolderId(rootId);
                         isConnecting.setValue(false);
                         setRootId("root_id", rootId, getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit());
                     } else {
@@ -202,7 +212,7 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
                     }
                 });
             } else {
-                ROOT_KEY = id;
+                userRepo.setRootFolderId(id);
                 isConnecting.setValue(false);
                 setRootId("root_id", id, getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit());
             }
@@ -233,15 +243,16 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
                             credential)
                             .setApplicationName(getString(R.string.app_name))
                             .build();
+
                     new Thread(() -> {
                         try {
-                            viewModel.getAbout(ConnectivityActivity.this, credential.getToken());
+                            getAbout(ConnectivityActivity.this, credential.getToken());
                         } catch (IOException | GoogleAuthException e) {
                             e.printStackTrace();
                         }
                     }).start();
-                    driverServiceHelper = new GoogleDriveServiceHelper(this, googleDriveService);
-                    isLoggedIn.setValue(true);
+                    userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService));
+                    userRepo.getLogin().setValue(true);
                     isConnecting.setValue(true);
                     checkRootFolder();
                 })
@@ -249,13 +260,26 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
     }
 
     @Override
-    public void onSelect(ArrayList<String> paths) {
+    public void onSelect(ArrayList<String> paths, int type) {
         Set<String> pathSet = new HashSet<>();
-        pathSet.addAll(Functions.getPaths(getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE), "selected_paths"));
-        pathSet.addAll(paths);
-        Functions.setPaths("selected_paths", pathSet, getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit());
-        startActivity(new Intent(this, SelectedFolderListActivity.class));
+        if (type == 0) {
+            pathSet.addAll(Functions.getPaths(getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE), "selected_paths"));
+            pathSet.addAll(paths);
+            Functions.setPaths("selected_paths", pathSet, getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit());
+            startActivity(new Intent(this, SelectedFolderListActivity.class));
+        } else {
+            pathSet.addAll(Functions.getPaths(getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE), "c_selected_paths"));
+            pathSet.addAll(paths);
+            Functions.setPaths("c_selected_paths", pathSet, getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit());
+            loadRecyclerView();
+        }
+
     }
 
 
+    @Override
+    public void onPlusClick() {
+        SelectFolderDialog dialog = new SelectFolderDialog(this, this, 1);
+        dialog.show(getSupportFragmentManager(), dialog.getTag());
+    }
 }

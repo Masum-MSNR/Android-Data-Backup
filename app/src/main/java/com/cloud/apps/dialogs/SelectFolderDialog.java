@@ -31,10 +31,12 @@ public class SelectFolderDialog extends AppCompatDialogFragment implements Folde
     ArrayList<File> folders;
     FolderAdapter adapter;
     SelectListener listener;
+    int type;
 
-    public SelectFolderDialog(Context context, SelectListener listener) {
+    public SelectFolderDialog(Context context, SelectListener listener, int type) {
         this.context = context;
         this.listener = listener;
+        this.type = type;
     }
 
     @NonNull
@@ -77,7 +79,7 @@ public class SelectFolderDialog extends AppCompatDialogFragment implements Folde
                 Toast.makeText(context, "Please select any folder. Tap and hold to select.", Toast.LENGTH_SHORT).show();
                 return;
             }
-            listener.onSelect(adapter.getPaths());
+            listener.onSelect(adapter.getPaths(),type);
             dismiss();
         });
 
@@ -93,7 +95,7 @@ public class SelectFolderDialog extends AppCompatDialogFragment implements Folde
         folders.clear();
         if (filesAndFolders != null) {
             for (File file : filesAndFolders) {
-                if (file.isDirectory()) {
+                if (file.isDirectory()&&!file.getName().startsWith(".")) {
                     folders.add(file);
                 }
             }
@@ -116,6 +118,6 @@ public class SelectFolderDialog extends AppCompatDialogFragment implements Folde
     }
 
     public interface SelectListener {
-        void onSelect(ArrayList<String> paths);
+        void onSelect(ArrayList<String> paths, int type);
     }
 }

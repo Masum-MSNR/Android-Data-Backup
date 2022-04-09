@@ -45,9 +45,7 @@ public class DashboardFragment extends Fragment {
 
         Consts.LAST_SYNC_TIME.observe((LifecycleOwner) context, s -> binding.lastSyncTv.setText(s.isEmpty() ? "Last Sync: Press Backup Icon" : "Last Synced: " + s));
 
-
         return binding.getRoot();
     }
-
 
 }

@@ -52,7 +52,7 @@ public class SelectedFolderListActivity extends AppCompatActivity implements Sel
 
         getSupportActionBar().setTitle("Selected Folder Being Synced");
 
-        selectFolderDialog = new SelectFolderDialog(this, this);
+        selectFolderDialog = new SelectFolderDialog(this, this, 0);
         folders = new ArrayList<>();
         loadingDialog = new LoadingDialog();
         loadToast = new LoadToast(this);
@@ -98,7 +98,7 @@ public class SelectedFolderListActivity extends AppCompatActivity implements Sel
 
 
     @Override
-    public void onSelect(ArrayList<String> paths) {
+    public void onSelect(ArrayList<String> paths, int type) {
         Set<String> pathSet = new HashSet<>();
         pathSet.addAll(Functions.getPaths(getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE), "selected_paths"));
         pathSet.addAll(paths);

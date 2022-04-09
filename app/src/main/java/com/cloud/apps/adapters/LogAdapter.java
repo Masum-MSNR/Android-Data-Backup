@@ -41,10 +41,30 @@ public class LogAdapter extends RecyclerView.Adapter<LogAdapter.ViewHolder> {
         h.binding.dateTimeTv.setText(logs.get(p).getDate());
         h.binding.detailsTv.setText(logs.get(p).getDetails());
 
-        h.binding.detailsTv.setTextColor(ContextCompat.getColor(context, logs.get(p).isSof() ? R.color.green : R.color.error));
-        h.binding.statusTv.setText(logs.get(p).isSof() ? "Uploaded:" : "Failed:");
-        h.binding.statusTv.setTextColor(ContextCompat.getColor(context, logs.get(p).isSof() ? R.color.green : R.color.error));
-
+        switch (logs.get(p).getStatus()) {
+            case 1:
+                h.binding.detailsTv.setTextColor(ContextCompat.getColor(context, R.color.green));
+                h.binding.statusTv.setText("Created:");
+                h.binding.statusTv.setTextColor(ContextCompat.getColor(context, R.color.green));
+                break;
+            case 3:
+                h.binding.detailsTv.setTextColor(ContextCompat.getColor(context, R.color.green));
+                h.binding.statusTv.setText("Uploaded:");
+                h.binding.statusTv.setTextColor(ContextCompat.getColor(context, R.color.green));
+                break;
+            case 5:
+                h.binding.detailsTv.setTextColor(ContextCompat.getColor(context, R.color.green));
+                h.binding.statusTv.setText("Downloaded:");
+                h.binding.statusTv.setTextColor(ContextCompat.getColor(context, R.color.green));
+                break;
+            case 2:
+            case 4:
+            case 6:
+                h.binding.detailsTv.setTextColor(ContextCompat.getColor(context, R.color.error));
+                h.binding.statusTv.setText("Failed:");
+                h.binding.statusTv.setTextColor(ContextCompat.getColor(context, R.color.error));
+                break;
+        }
     }
 
     @Override

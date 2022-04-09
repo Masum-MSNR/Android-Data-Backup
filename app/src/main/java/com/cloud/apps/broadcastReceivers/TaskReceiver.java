@@ -5,6 +5,7 @@ import static com.cloud.apps.utils.Consts.MY_PREFS_NAME;
 import static com.cloud.apps.utils.Consts.NOTIFICATION_CHANNEL_ID;
 import static com.cloud.apps.utils.Consts.mutableLogSet;
 import static com.cloud.apps.utils.Functions.convertedTime;
+import static com.cloud.apps.utils.Functions.getSize;
 import static com.cloud.apps.utils.Functions.setAlarm;
 
 import android.content.BroadcastReceiver;
@@ -100,49 +101,42 @@ public class TaskReceiver extends BroadcastReceiver {
                     if (id.isEmpty()) {
                         driverServiceHelper.createNewFolder(folderName, parentId)
                                 .addOnSuccessListener(folderId -> {
-                                    Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is created successfully" + "s");
-                                    File[] fileFolders = root.listFiles();
-                                    if (fileFolders != null && fileFolders.length > 0) {
-                                        for (File file : fileFolders) {
-                                            if (file.isDirectory()) {
-                                                uploadFolder(file.getPath(), folderId);
-                                            } else {
-                                                driverServiceHelper.isFilePresent(file.getPath(), folderId).addOnSuccessListener(aBoolean -> {
-                                                    if (!aBoolean) {
-                                                        driverServiceHelper.uploadFileToGoogleDrive(file.getPath(), folderId).addOnSuccessListener(aBoolean1 -> {
-                                                            if (aBoolean1) {
-                                                                int file_size = Integer.parseInt(String.valueOf(file.length()));
-                                                                String bkm = "B";
-                                                                if (file_size >= 1024) {
-                                                                    file_size = Integer.parseInt(String.valueOf(file_size / 1024));
-                                                                    bkm = "KB";
+                                    if (folderId.isEmpty()) {
+                                        Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is created successfully" + "1");
+                                        File[] fileFolders = root.listFiles();
+                                        if (fileFolders != null && fileFolders.length > 0) {
+                                            for (File file : fileFolders) {
+                                                if (file.isDirectory()) {
+                                                    uploadFolder(file.getPath(), folderId);
+                                                } else {
+                                                    driverServiceHelper.isFilePresent(file.getPath(), folderId).addOnSuccessListener(aBoolean -> {
+                                                        if (!aBoolean) {
+                                                            driverServiceHelper.uploadFileToGoogleDrive(file.getPath(), folderId).addOnSuccessListener(aBoolean1 -> {
+                                                                if (aBoolean1) {
+                                                                    String lastSyncedTime = convertedTime(System.currentTimeMillis());
+                                                                    Functions.saveNewLog(context, lastSyncedTime + " " + file.getPath() + " (" + getSize(file.length()) + ")" + "3");
+                                                                    editor.putString("last_sync_time", lastSyncedTime);
+                                                                    editor.apply();
+                                                                    showNotification(lastSyncedTime);
                                                                 }
-                                                                if (file_size >= 1024) {
-                                                                    file_size = Integer.parseInt(String.valueOf(file_size / 1024));
-                                                                    bkm = "MB";
-                                                                }
-
-                                                                String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                                                                Functions.saveNewLog(context, lastSyncedTime + " " + file.getPath() + " (" + file_size + bkm + ")" + "s");
-                                                                editor.putString("last_sync_time", lastSyncedTime);
-                                                                editor.apply();
-                                                                showNotification(lastSyncedTime);
-                                                            }
-                                                        });
-                                                    } else {
-                                                        String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                                                        editor.putString("last_sync_time", lastSyncedTime);
-                                                        editor.apply();
-                                                        showNotification(lastSyncedTime);
-                                                    }
-                                                });
+                                                            });
+                                                        } else {
+                                                            String lastSyncedTime = convertedTime(System.currentTimeMillis());
+                                                            editor.putString("last_sync_time", lastSyncedTime);
+                                                            editor.apply();
+                                                            showNotification(lastSyncedTime);
+                                                        }
+                                                    });
+                                                }
                                             }
+                                        } else {
+                                            String lastSyncedTime = convertedTime(System.currentTimeMillis());
+                                            editor.putString("last_sync_time", lastSyncedTime);
+                                            editor.apply();
+                                            showNotification(lastSyncedTime);
                                         }
                                     } else {
-                                        String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                                        editor.putString("last_sync_time", lastSyncedTime);
-                                        editor.apply();
-                                        showNotification(lastSyncedTime);
+                                        Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " failed to create" + "2");
                                     }
                                 });
                     } else {
@@ -168,7 +162,7 @@ public class TaskReceiver extends BroadcastReceiver {
                                                     }
 
                                                     String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                                                    Functions.saveNewLog(context, lastSyncedTime + " " + file.getPath() + " (" + file_size + bkm + ")" + "s");
+                                                    Functions.saveNewLog(context, lastSyncedTime + " " + file.getPath() + " (" + file_size + bkm + ")" + "3");
                                                     editor.putString("last_sync_time", lastSyncedTime);
                                                     editor.apply();
                                                     showNotification(lastSyncedTime);

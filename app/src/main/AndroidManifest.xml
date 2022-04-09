@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="your.package.alarm.permission.SET_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".App"
@@ -18,10 +19,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FileManagerDemo.WithActionBar">
         <activity
+            android:name=".activities.ViewFolderActivity"
+            android:exported="true"></activity>
+        <activity
+            android:name=".activities.SpecificFileActivity"
+            android:exported="true" />
+        <activity
             android:name=".activities.ConnectivityActivity"
-            android:exported="true">
-
-        </activity>
+            android:exported="true"></activity>
         <activity
             android:name=".activities.SelectedFolderListActivity"
             android:exported="true" />
@@ -34,6 +39,7 @@
             android:theme="@style/Theme.FileManagerDemo.WithActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -43,6 +49,16 @@
         <receiver
             android:name=".broadcastReceivers.TaskReceiver"
             android:exported="false" />
+        <receiver
+            android:name=".broadcastReceivers.OnBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

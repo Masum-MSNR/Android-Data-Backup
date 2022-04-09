@@ -1,7 +1,5 @@
 package com.cloud.apps.adapters;
 
-import static com.cloud.apps.utils.Consts.ROOT_KEY;
-
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.cloud.apps.R;
 import com.cloud.apps.databinding.AdapterFullFolderBinding;
 import com.cloud.apps.driveApi.GoogleDriveServiceHelper;
+import com.cloud.apps.repo.UserRepo;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -77,7 +76,7 @@ public class FullFolderAdapter extends RecyclerView.Adapter<FullFolderAdapter.Vi
             });
             h.binding.syncIv.setImageResource(R.drawable.ic_baseline_sync_24);
             h.binding.syncIv.startAnimation(animation);
-            helper.uploadFolder(folders.get(p), ROOT_KEY, fileCounter(folders.get(p)), animation, p);
+            helper.uploadFolder(folders.get(p), UserRepo.getInstance(context).getRootFolderId(), fileCounter(folders.get(p)), animation, p);
         }
         h.itemView.setOnClickListener(v -> {
             h.binding.folderItemsRv.setVisibility(h.binding.folderItemsRv.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
@@ -88,7 +87,7 @@ public class FullFolderAdapter extends RecyclerView.Adapter<FullFolderAdapter.Vi
         File root = new File(folders.get(p));
         File[] filesAndFolders = root.listFiles();
         ArrayList<File> fileFolders = new ArrayList<>();
-        FolderFileAdapter adapter = new FolderFileAdapter(context, fileFolders);
+        FolderFileAdapter adapter = new FolderFileAdapter(context, fileFolders, false);
         h.binding.folderItemsRv.setAdapter(adapter);
         if (filesAndFolders != null) {
             fileFolders.addAll(Arrays.asList(filesAndFolders));

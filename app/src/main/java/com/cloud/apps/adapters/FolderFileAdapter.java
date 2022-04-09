@@ -18,10 +18,20 @@ public class FolderFileAdapter extends RecyclerView.Adapter<FolderFileAdapter.Vi
 
     Context context;
     ArrayList<File> folders;
+    OnClick listener;
+    boolean isClickAble;
 
-    public FolderFileAdapter(Context context, ArrayList<File> folders) {
+    public FolderFileAdapter(Context context, ArrayList<File> folders, OnClick listener, boolean isClickAble) {
         this.context = context;
         this.folders = folders;
+        this.listener = listener;
+        this.isClickAble = isClickAble;
+    }
+
+    public FolderFileAdapter(Context context, ArrayList<File> folders, boolean isClickAble) {
+        this.context = context;
+        this.folders = folders;
+        this.isClickAble = isClickAble;
     }
 
     @NonNull
@@ -41,7 +51,9 @@ public class FolderFileAdapter extends RecyclerView.Adapter<FolderFileAdapter.Vi
 
 
         h.itemView.setOnClickListener(v -> {
-
+            if (!isClickAble || !selectedFile.isDirectory())
+                return;
+            listener.onClick(selectedFile.getName());
         });
 
     }
@@ -60,6 +72,10 @@ public class FolderFileAdapter extends RecyclerView.Adapter<FolderFileAdapter.Vi
             super(itemView);
             binding = AdapterFolderFileListBinding.bind(itemView);
         }
+    }
+
+    public interface OnClick {
+        void onClick(String currentDir);
     }
 
 }

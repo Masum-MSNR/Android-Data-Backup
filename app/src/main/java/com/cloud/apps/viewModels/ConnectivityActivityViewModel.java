@@ -21,31 +21,10 @@ import java.io.File;
 
 public class ConnectivityActivityViewModel extends ViewModel {
 
-    private MutableLiveData<String> driveAvailAbleStorage;
-    private int drivePercentage;
+
 
     public void init() {
-        driveAvailAbleStorage = new MutableLiveData<>();
-    }
 
-    public void getAbout(Context context, String token) {
-        String url = "https://www.googleapis.com/drive/v3/about?fields=storageQuota&access_token=" + token;
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, response -> {
-            try {
-                JSONObject json = new JSONObject(response);
-                json = new JSONObject(json.getString("storageQuota"));
-                long use = Long.parseLong(json.getString("usageInDrive"));
-                driveAvailAbleStorage.setValue(getSize(use) + "/15GB");
-                long totalSize = 1024 * 1024 * 1024;
-                totalSize *= 15;
-                drivePercentage = (int) ((float) (totalSize - use) / (float) totalSize);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }, error -> {
-            Log.e("Error", error.toString());
-        });
-        VolleySingleton.getInstance(context).addToRequestQueue(context, stringRequest);
     }
 
     public long getFreeStorage() {
@@ -76,17 +55,5 @@ public class ConnectivityActivityViewModel extends ViewModel {
         long free = getFreeStorage();
         long totalStorage = getTotalStorage();
         return (int) (((float) (totalStorage - free) / (float) totalStorage) * 100);
-    }
-
-    public MutableLiveData<String> getDriveAvailAbleStorage() {
-        return driveAvailAbleStorage;
-    }
-
-    public void setDriveAvailAbleStorage(MutableLiveData<String> driveAvailAbleStorage) {
-        this.driveAvailAbleStorage = driveAvailAbleStorage;
-    }
-
-    public int getDrivePercentage() {
-        return drivePercentage;
     }
 }

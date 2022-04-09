@@ -2,12 +2,12 @@ package com.cloud.apps.models;
 
 public class LoG {
     String date, details;
-    boolean sof;
+    int status;
 
     public LoG(String log) {
         this.date = log.substring(0, 21);
         this.details = log.substring(21, log.length() - 1);
-        this.sof = log.endsWith("s");
+        this.status = Integer.parseInt(log.substring(log.length() - 1));
     }
 
     public String getDate() {
@@ -18,8 +18,7 @@ public class LoG {
         return details;
     }
 
-    public boolean isSof() {
-        return sof;
+    public int getStatus() {
+        return status;
     }
-
 }

@@ -2,6 +2,7 @@ package com.cloud.apps.driveApi;
 
 import static com.cloud.apps.utils.Consts.MY_PREFS_NAME;
 import static com.cloud.apps.utils.Functions.convertedTime;
+import static com.cloud.apps.utils.Functions.getSize;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -9,9 +10,12 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.animation.Animation;
 import android.webkit.MimeTypeMap;
 
+import com.cloud.apps.models.DriveFile;
+import com.cloud.apps.repo.UserRepo;
 import com.cloud.apps.utils.Consts;
 import com.cloud.apps.utils.Functions;
 import com.google.android.gms.tasks.Task;
@@ -22,8 +26,11 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
@@ -42,10 +49,12 @@ public class GoogleDriveServiceHelper {
 
     int[] count = new int[100];
 
+    UserRepo userRepo;
 
     public GoogleDriveServiceHelper(Context context, Drive drive) {
         this.context = context;
         this.drive = drive;
+        userRepo = UserRepo.getInstance(context);
     }
 
     /**
@@ -174,25 +183,75 @@ public class GoogleDriveServiceHelper {
                         .execute();
                 result = true;
             } catch (IOException e) {
-                int file_size = Integer.parseInt(String.valueOf(tempFile.length()));
-                String bkm = "B";
-                if (file_size >= 1024) {
-                    file_size = Integer.parseInt(String.valueOf(file_size / 1024));
-                    bkm = "KB";
-                }
-                if (file_size >= 1024) {
-                    file_size = Integer.parseInt(String.valueOf(file_size / 1024));
-                    bkm = "MB";
-                }
-
-                Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + tempFile.getPath() + " (" + file_size + bkm + ")" + "f");
-
+                Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + tempFile.getPath() + " (" + getSize(tempFile.length()) + ")" + "4");
                 result = false;
             }
 
             boolean finalResult = result;
             new Handler(Looper.getMainLooper()).postDelayed(() -> tcs.setResult(finalResult), 1000);
         });
+        return tcs.getTask();
+    }
+
+    /**
+     * Loads data using folder id.
+     */
+    public Task<ArrayList<DriveFile>> getDataFromDrive(String folderId) {
+        final TaskCompletionSource<ArrayList<DriveFile>> tcs = new TaskCompletionSource<>();
+        ExecutorService service = Executors.newFixedThreadPool(2);
+        ArrayList<DriveFile> files = new ArrayList<>();
+
+        service.execute(() -> {
+            FileList fileList = null;
+            try {
+                fileList = drive.files().list()
+                        .setQ("trashed=false and parents='" + folderId + "'")
+                        .setFields("files(id, name, modifiedTime,mimeType)")
+                        .setSpaces("drive")
+                        .execute();
+
+            } catch (IOException e) {
+                Log.v("Error", "Something went wrong");
+            }
+
+            if (fileList != null) {
+                for (File file : fileList.getFiles()) {
+                    files.add(new DriveFile(file.getName(), file.getId(), folderDetector(file.getMimeType())));
+                }
+            }
+            new Handler(Looper.getMainLooper()).postDelayed(() -> tcs.setResult(files), 1000);
+
+        });
+
+        return tcs.getTask();
+    }
+
+    private boolean folderDetector(String mimeType) {
+        return mimeType.equals("application/vnd.google-apps.folder");
+    }
+
+
+    /**
+     * Download file from the user's My Drive Folder.
+     */
+    public Task<Boolean> downloadFile(final java.io.File fileSaveLocation, final String fileId) {
+        final TaskCompletionSource<Boolean> tcs = new TaskCompletionSource<>();
+        ExecutorService service = Executors.newFixedThreadPool(2);
+        service.execute(() -> {
+            boolean result;
+            try {
+                OutputStream outputStream = new FileOutputStream(fileSaveLocation);
+                drive.files().get(fileId).executeMediaAndDownloadTo(outputStream);
+                result = true;
+            } catch (IOException e) {
+                result = false;
+            }
+
+            boolean finalResult = result;
+            new Handler(Looper.getMainLooper()).postDelayed(() -> tcs.setResult(finalResult), 1000);
+
+        });
+
         return tcs.getTask();
     }
 
@@ -204,11 +263,11 @@ public class GoogleDriveServiceHelper {
                     if (id.isEmpty()) {
                         createNewFolder(folderName, parentId)
                                 .addOnSuccessListener(folderId -> {
-                                    Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is created successfully" + "s");
+                                    Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is created successfully" + "1");
                                     uploadFolderInside(root, folderId, fileCount, animation, p);
                                 })
                                 .addOnFailureListener(e -> {
-                                    Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is failed to create." + "f");
+                                    Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is failed to create" + "2");
                                 });
                     } else {
                         uploadFolderInside(root, id, fileCount, animation, p);
@@ -230,18 +289,7 @@ public class GoogleDriveServiceHelper {
                         if (!aBoolean) {
                             uploadFileToGoogleDrive(file.getPath(), id).addOnSuccessListener(aBoolean1 -> {
                                 if (aBoolean1) {
-                                    int file_size = Integer.parseInt(String.valueOf(file.length()));
-                                    String bkm = "B";
-                                    if (file_size >= 1024) {
-                                        file_size = Integer.parseInt(String.valueOf(file_size / 1024));
-                                        bkm = "KB";
-                                    }
-                                    if (file_size >= 1024) {
-                                        file_size = Integer.parseInt(String.valueOf(file_size / 1024));
-                                        bkm = "MB";
-                                    }
-
-                                    Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + file.getPath() + " (" + file_size + bkm + ")" + "s");
+                                    Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + file.getPath() + " (" + getSize(file.length()) + ")" + "3");
                                     count[p]++;
                                     terminator(fileCount, p, animation);
                                 }

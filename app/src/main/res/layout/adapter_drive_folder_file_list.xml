@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingHorizontal="10dp"
+    android:paddingVertical="5dp">
+
+    <ImageView
+        android:id="@+id/icon_iv"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        tools:ignore="ContentDescription"
+        tools:src="@drawable/ic_baseline_folder_24" />
+
+    <TextView
+        android:id="@+id/file_name_tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toStartOf="@id/download_frame"
+        android:layout_toEndOf="@id/icon_iv"
+        android:padding="10dp"
+        android:textColor="@color/black"
+        tools:text="Documents" />
+
+    <FrameLayout
+        android:id="@+id/download_frame"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true">
+
+        <ImageView
+            android:id="@+id/download_ibt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:padding="5dp"
+            android:src="@drawable/ic_baseline_download_24"
+            android:visibility="visible"
+            tools:ignore="ContentDescription" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:padding="5dp"
+            android:visibility="invisible" />
+
+    </FrameLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/file_name_tv"
+        android:layout_marginTop="2dp"
+        android:background="@color/cardview_shadow_start_color" />
+
+</RelativeLayout>

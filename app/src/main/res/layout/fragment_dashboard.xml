@@ -154,7 +154,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@drawable/bg_fade_horizontalline"
+            android:background="@drawable/bg_fade_horizontal_line"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/backup_ll" />
 
