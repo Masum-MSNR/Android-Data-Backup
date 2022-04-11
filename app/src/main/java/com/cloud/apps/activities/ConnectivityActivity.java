@@ -28,7 +28,8 @@ import com.cloud.apps.R;
 import com.cloud.apps.adapters.BlockFolderAdapter;
 import com.cloud.apps.databinding.ActivityConnectivityBinding;
 import com.cloud.apps.dialogs.SelectFolderDialog;
-import com.cloud.apps.driveApi.GoogleDriveServiceHelper;
+import com.cloud.apps.driveApi.DriveDownloadService;
+import com.cloud.apps.driveApi.DriveService;
 import com.cloud.apps.repo.UserRepo;
 import com.cloud.apps.utils.Consts;
 import com.cloud.apps.utils.Functions;
@@ -189,7 +190,8 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
                 e.printStackTrace();
             }
         }).start();
-        userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService));
+        userRepo.setDriveServiceHelper(new DriveService(this, googleDriveService));
+        userRepo.setDriveDownloadService(new DriveDownloadService(googleDriveService));
         userRepo.getLogin().setValue(true);
         isConnecting.setValue(true);
 
@@ -253,7 +255,8 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
                             e.printStackTrace();
                         }
                     }).start();
-                    userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService));
+                    userRepo.setDriveServiceHelper(new DriveService(this, googleDriveService));
+                    userRepo.setDriveDownloadService(new DriveDownloadService(googleDriveService));
                     userRepo.getLogin().setValue(true);
                     isConnecting.setValue(true);
                     checkRootFolder();

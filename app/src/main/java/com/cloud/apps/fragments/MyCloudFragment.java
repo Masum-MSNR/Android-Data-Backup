@@ -19,14 +19,17 @@ import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.cloud.apps.adapters.DriveFolderFileAdapter;
 import com.cloud.apps.databinding.FragmentMyCloudBinding;
+import com.cloud.apps.dialogs.LoadingDialog;
 import com.cloud.apps.models.DriveFile;
 import com.cloud.apps.repo.UserRepo;
 
 import java.util.ArrayList;
+import java.util.Stack;
 
 public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.OnClick {
 
@@ -38,16 +41,19 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
     MutableLiveData<Boolean> isConnecting;
     DriveFolderFileAdapter adapter;
     ArrayList<DriveFile> files;
-    ArrayList<DriveFile> tempDriveFiles;
-
+    Stack<ArrayList<DriveFile>> listStack;
+    Observer<String> observer;
     String currentId;
+    LoadingDialog dialog;
 
     public MyCloudFragment(Context context) {
         this.context = context;
         userRepo = UserRepo.getInstance(context);
         isConnecting = new MutableLiveData<>(false);
         files = new ArrayList<>();
-        tempDriveFiles = new ArrayList<>();
+        listStack = new Stack<>();
+        dialog = new LoadingDialog();
+        dialog.setCancelable(false);
     }
 
     @Override
@@ -55,27 +61,40 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
                              Bundle savedInstanceState) {
         binding = FragmentMyCloudBinding.inflate(getLayoutInflater());
 
-
-        adapter = new DriveFolderFileAdapter(context, tempDriveFiles, this, true);
+        adapter = new DriveFolderFileAdapter(context, files, this, true);
         binding.driveFilesRv.setLayoutManager(new LinearLayoutManager(context));
         binding.driveFilesRv.setAdapter(adapter);
+
+        dialog.show(getChildFragmentManager(), dialog.getTag());
         //listeners
 
-        previousId.observe((LifecycleOwner) context, s -> {
-            if (s.isEmpty()) {
-                return;
+        observer = new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                Log.d(TAG, "onCreateView: ");
+                if (s.isEmpty()) {
+                    return;
+                }
+                currentId = s;
+                files.clear();
+                files.addAll(listStack.pop());
+                binding.notifier.setVisibility(files.size() == 0 ? View.VISIBLE : View.INVISIBLE);
+                loadRv();
             }
-            currentId = s;
-            loadRv(s);
-        });
+        };
+        previousId.observe((LifecycleOwner) context, observer);
 
         isConnecting.observe((LifecycleOwner) context, aBoolean -> {
-            binding.progressBar.setVisibility(aBoolean ? View.VISIBLE : View.GONE);
+            if (aBoolean) {
+                dialog.show(getChildFragmentManager(), dialog.getTag());
+            } else {
+                dialog.dismiss();
+            }
             binding.progressFrame.setVisibility(aBoolean ? View.VISIBLE : View.GONE);
         });
 
         binding.tryAgainBt.setOnClickListener(v -> {
-            binding.progressBar.setVisibility(View.VISIBLE);
+            dialog.show(getChildFragmentManager(), dialog.getTag());
             binding.tryAgainBt.setVisibility(View.GONE);
             checkRootFolder();
         });
@@ -88,25 +107,18 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
 
 
     private void loadDriveFiles(String id) {
-        Log.d(TAG, "loadDriveFiles: ");
-        binding.centerPb.setVisibility(View.VISIBLE);
+        dialog.show(getChildFragmentManager(), dialog.getTag());
         files.clear();
-        userRepo.getDriveServiceHelper().getDataFromDrive().addOnSuccessListener(driveFiles -> {
+        userRepo.getDriveDownloadService().getDataFromDrive(id).addOnSuccessListener(driveFiles -> {
             binding.notifier.setText(driveFiles.size() == 0 ? "Empty" : "");
             binding.notifier.setVisibility(driveFiles.size() == 0 ? View.VISIBLE : View.INVISIBLE);
             files.addAll(driveFiles);
-            loadRv(id);
+            loadRv();
         });
     }
 
-    private void loadRv(String id) {
-        tempDriveFiles.clear();
-        for (DriveFile f : files) {
-            if (f.getParent().equals(id)) {
-                tempDriveFiles.add(f);
-            }
-        }
-        binding.centerPb.setVisibility(View.INVISIBLE);
+    private void loadRv() {
+        dialog.dismiss();
         adapter.notifyDataSetChanged();
     }
 
@@ -139,7 +151,7 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
                         loadDriveFiles(rootId);
                     } else {
                         binding.tryAgainBt.setVisibility(View.VISIBLE);
-                        binding.progressBar.setVisibility(View.GONE);
+                        dialog.dismiss();
                         binding.progressFrame.setVisibility(View.GONE);
                         Toast.makeText(context, "Something went wrong! Please try again.", Toast.LENGTH_SHORT).show();
                     }
@@ -157,7 +169,11 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
     public void onClick(String id) {
         folderTrack.push(currentId);
         currentId = id;
-        loadRv(id);
+        ArrayList<DriveFile> driveFiles = new ArrayList<>(adapter.getFolders());
+        listStack.push(driveFiles);
+        files.clear();
+        adapter.notifyDataSetChanged();
+        loadDriveFiles(id);
     }
 
     @Override
@@ -165,5 +181,6 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
         super.onDestroy();
         folderTrack.clear();
         previousId.setValue("");
+        previousId.removeObserver(observer);
     }
 }

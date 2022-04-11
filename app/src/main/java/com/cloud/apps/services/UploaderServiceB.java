@@ -5,6 +5,7 @@ import static com.cloud.apps.utils.Consts.MY_PREFS_NAME;
 import static com.cloud.apps.utils.Consts.NOTIFICATION_CHANNEL_ID;
 import static com.cloud.apps.utils.Consts.PHONE_NAME;
 import static com.cloud.apps.utils.Consts.mutableLogSet;
+import static com.cloud.apps.utils.Consts.token;
 import static com.cloud.apps.utils.Functions.convertedTime;
 
 import android.app.Service;
@@ -22,7 +23,7 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.lifecycle.MutableLiveData;
 
 import com.cloud.apps.R;
-import com.cloud.apps.driveApi.BackgroundGoogleDriveServiceHelper;
+import com.cloud.apps.driveApi.BGDriveService;
 import com.cloud.apps.helpers.DBHelper;
 import com.cloud.apps.models.UploadAbleFile;
 import com.cloud.apps.utils.Functions;
@@ -46,7 +47,7 @@ import java.util.TreeSet;
 public class UploaderServiceB extends Service {
 
     Context context;
-    BackgroundGoogleDriveServiceHelper backgroundGoogleDriveServiceHelper;
+    BGDriveService backgroundGoogleDriveServiceHelper;
     DBHelper dbHelper;
     SharedPreferences.Editor editor;
 
@@ -54,7 +55,7 @@ public class UploaderServiceB extends Service {
     Queue<File> allFiles;
 
 
-    String rootId, token, imageId, videoId, documentId, audioId;
+    String rootId, imageId, videoId, documentId, audioId;
     String[] subFolders = new String[]{
             PHONE_NAME + "/Images",
             PHONE_NAME + "/Videos",
@@ -62,6 +63,8 @@ public class UploaderServiceB extends Service {
             PHONE_NAME + "/Audios",
     };
     int i = 0, count = 0, lCount = 0, iMax = 500;
+    int imageI = 0, videoI = 0, documentI = 0, audioI = 0;
+    int ai = 0;
     long maxSize = 1073741824;
     long current = 0;
     boolean readyToStop = false;
@@ -81,6 +84,8 @@ public class UploaderServiceB extends Service {
 
             @Override
             public void onFinish() {
+                showNotification(convertedTime(System.currentTimeMillis()));
+                dbHelper.close();
                 stopSelf();
             }
         }.start();
@@ -111,7 +116,7 @@ public class UploaderServiceB extends Service {
             }
         }).start();
 
-        backgroundGoogleDriveServiceHelper = new BackgroundGoogleDriveServiceHelper(context, googleDriveService);
+        backgroundGoogleDriveServiceHelper = new BGDriveService(context, googleDriveService);
         editor = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
         rootId = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).getString("root_id", "");
         Set<String> pathSet = new HashSet<>(Functions.getPaths(context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE), "selected_paths"));
@@ -129,6 +134,7 @@ public class UploaderServiceB extends Service {
             }
         } else {
             i = 0;
+            ai=(500-i)/4;
             checkImageFolder(subFolders[0], rootId);
         }
         return START_REDELIVER_INTENT;
@@ -142,9 +148,9 @@ public class UploaderServiceB extends Service {
                     if (id.isEmpty()) {
                         backgroundGoogleDriveServiceHelper.createNewFolder(folderName, parentId)
                                 .addOnSuccessListener(folderId -> {
+                                    File[] fileFolders = root.listFiles();
                                     if (!folderId.isEmpty()) {
                                         Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is created successfully" + "1");
-                                        File[] fileFolders = root.listFiles();
                                         if (fileFolders != null && fileFolders.length > 0) {
                                             for (File file : fileFolders) {
                                                 if (file.isDirectory()) {
@@ -167,8 +173,21 @@ public class UploaderServiceB extends Service {
                                         }
                                     } else {
                                         Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " failed to create" + "2");
+                                        if (fileFolders != null && fileFolders.length > 0) {
+                                            for (int j = 0; j < fileFolders.length; j++) {
+                                                check();
+                                            }
+                                        }
                                     }
-                                });
+                                }).addOnFailureListener(e -> {
+                            Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " failed to create" + "2");
+                            File[] fileFolders = root.listFiles();
+                            if (fileFolders != null && fileFolders.length > 0) {
+                                for (int j = 0; j < fileFolders.length; j++) {
+                                    check();
+                                }
+                            }
+                        });
                     } else {
                         File[] fileFolders = root.listFiles();
                         if (fileFolders != null && fileFolders.length > 0) {
@@ -178,6 +197,8 @@ public class UploaderServiceB extends Service {
                                 } else {
                                     backgroundGoogleDriveServiceHelper.isFilePresent(file.getPath(), id).addOnSuccessListener(aBoolean -> {
                                         if (!aBoolean) {
+                                            current += file.length();
+                                            i++;
                                             if (maxSize >= current && i <= iMax) {
                                                 queue.add(new UploadAbleFile(file.getPath(), id, null));
                                             } else {
@@ -190,7 +211,7 @@ public class UploaderServiceB extends Service {
                             }
                         }
                     }
-                });
+                }).addOnFailureListener(e->{});
     }
 
     private void check() {
@@ -208,6 +229,7 @@ public class UploaderServiceB extends Service {
             backgroundGoogleDriveServiceHelper.isDriveSpaceAvailable(tempFile, token).addOnSuccessListener(integer -> {
                 if (integer == 2) {
                     backgroundGoogleDriveServiceHelper.uploadFileToGoogleDriveV2(uploadAbleFile).addOnSuccessListener(aBoolean -> {
+                        Log.v("result", aBoolean + "");
                         queue.remove();
                         upload();
                         showNotification(convertedTime(System.currentTimeMillis()));
@@ -233,7 +255,7 @@ public class UploaderServiceB extends Service {
                 dbHelper.close();
                 stopSelf();
             } else {
-                i = 0;
+                ai=(500-i)/4;
                 checkImageFolder(subFolders[0], rootId);
             }
         }
@@ -374,11 +396,29 @@ public class UploaderServiceB extends Service {
                 stopSelf();
             }
 
-
             if (currentFile.getPath().toLowerCase().endsWith(".jpg")
                     || currentFile.getPath().toLowerCase().endsWith(".jpeg")
                     || currentFile.getPath().toLowerCase().endsWith(".png")
+                    || currentFile.getPath().toLowerCase().endsWith(".bmp")
+                    || currentFile.getPath().toLowerCase().endsWith(".gif")
+                    || currentFile.getPath().toLowerCase().endsWith(".tif")
+                    || currentFile.getPath().toLowerCase().endsWith(".tiff")
+                    || currentFile.getPath().toLowerCase().endsWith(".svg")
+                    || currentFile.getPath().toLowerCase().endsWith(".cr2")
+                    || currentFile.getPath().toLowerCase().endsWith(".crw")
+                    || currentFile.getPath().toLowerCase().endsWith(".nef")
+                    || currentFile.getPath().toLowerCase().endsWith(".nrw")
+                    || currentFile.getPath().toLowerCase().endsWith(".sr2")
+                    || currentFile.getPath().toLowerCase().endsWith(".dng")
+                    || currentFile.getPath().toLowerCase().endsWith(".arw")
+                    || currentFile.getPath().toLowerCase().endsWith(".orf")
+
             ) {
+                if (imageI == ai) {
+                    getUploadAbleFiles();
+                    return;
+                }
+                imageI++;
                 if (imageId != null) {
                     id = imageId;
                 } else {
@@ -388,10 +428,33 @@ public class UploaderServiceB extends Service {
             } else if (currentFile.getPath().toLowerCase().endsWith(".mp4")
                     || currentFile.getPath().toLowerCase().endsWith(".mkv")
                     || currentFile.getPath().toLowerCase().endsWith(".webm")
+                    || currentFile.getPath().toLowerCase().endsWith(".3gp")
+                    || currentFile.getPath().toLowerCase().endsWith(".3gpp")
+                    || currentFile.getPath().toLowerCase().endsWith(".3gpp2")
+                    || currentFile.getPath().toLowerCase().endsWith(".asf")
+                    || currentFile.getPath().toLowerCase().endsWith(".avi")
+                    || currentFile.getPath().toLowerCase().endsWith(".dv")
+                    || currentFile.getPath().toLowerCase().endsWith(".m2t")
+                    || currentFile.getPath().toLowerCase().endsWith(".m4v")
+                    || currentFile.getPath().toLowerCase().endsWith(".mpeg")
+                    || currentFile.getPath().toLowerCase().endsWith(".mpg")
+                    || currentFile.getPath().toLowerCase().endsWith(".mts")
+                    || currentFile.getPath().toLowerCase().endsWith(".oggthreora")
+                    || currentFile.getPath().toLowerCase().endsWith(".ogv")
+                    || currentFile.getPath().toLowerCase().endsWith(".rm")
+                    || currentFile.getPath().toLowerCase().endsWith(".ts")
+                    || currentFile.getPath().toLowerCase().endsWith(".vob")
+                    || currentFile.getPath().toLowerCase().endsWith(".wmv")
+                    || currentFile.getPath().toLowerCase().endsWith(".flv")
                     || currentFile.getPath().toLowerCase().endsWith(".mov")
                     || currentFile.getPath().toLowerCase().endsWith(".flv")
                     || currentFile.getPath().toLowerCase().endsWith(".avchd")
             ) {
+                if (videoI == ai) {
+                    getUploadAbleFiles();
+                    return;
+                }
+                videoI++;
                 if (videoId != null) {
                     id = videoId;
                 } else {
@@ -399,15 +462,33 @@ public class UploaderServiceB extends Service {
                     return;
                 }
             } else if (currentFile.getPath().toLowerCase().endsWith(".pdf")
+                    || currentFile.getPath().toLowerCase().endsWith(".doc")
                     || currentFile.getPath().toLowerCase().endsWith(".docx")
+                    || currentFile.getPath().toLowerCase().endsWith(".epub")
                     || currentFile.getPath().toLowerCase().endsWith(".html")
                     || currentFile.getPath().toLowerCase().endsWith(".htm")
                     || currentFile.getPath().toLowerCase().endsWith(".xls")
                     || currentFile.getPath().toLowerCase().endsWith(".xlsx")
                     || currentFile.getPath().toLowerCase().endsWith(".txt")
+                    || currentFile.getPath().toLowerCase().endsWith(".csv")
+                    || currentFile.getPath().toLowerCase().endsWith(".rtf")
+                    || currentFile.getPath().toLowerCase().endsWith(".md")
+                    || currentFile.getPath().toLowerCase().endsWith(".odt")
                     || currentFile.getPath().toLowerCase().endsWith(".ppt")
                     || currentFile.getPath().toLowerCase().endsWith(".pptx")
+                    || currentFile.getPath().toLowerCase().endsWith(".pptm")
+                    || currentFile.getPath().toLowerCase().endsWith(".pps")
+                    || currentFile.getPath().toLowerCase().endsWith(".ppsm")
+                    || currentFile.getPath().toLowerCase().endsWith(".ppsx")
+                    || currentFile.getPath().toLowerCase().endsWith(".ai")
+                    || currentFile.getPath().toLowerCase().endsWith(".eps")
+                    || currentFile.getPath().toLowerCase().endsWith(".psd")
             ) {
+                if (documentI == ai) {
+                    getUploadAbleFiles();
+                    return;
+                }
+                documentI++;
                 if (documentId != null) {
                     id = documentId;
                 } else {
@@ -417,7 +498,16 @@ public class UploaderServiceB extends Service {
             } else if (currentFile.getPath().toLowerCase().endsWith(".mp3")
                     || currentFile.getPath().toLowerCase().endsWith(".m4a")
                     || currentFile.getPath().toLowerCase().endsWith(".wav")
+                    || currentFile.getPath().toLowerCase().endsWith(".wma")
+                    || currentFile.getPath().toLowerCase().endsWith(".acc")
+                    || currentFile.getPath().toLowerCase().endsWith(".flac")
+                    || currentFile.getPath().toLowerCase().endsWith(".oga")
             ) {
+                if (audioI == ai) {
+                    getUploadAbleFiles();
+                    return;
+                }
+                audioI++;
                 if (audioId != null) {
                     id = audioId;
                 } else {
@@ -429,6 +519,7 @@ public class UploaderServiceB extends Service {
                 getUploadAbleFiles();
                 return;
             }
+            current += currentFile.length();
             i++;
             if (maxSize >= current && i <= iMax) {
                 queue.add(new UploadAbleFile(currentFile.getPath(), id, null));
@@ -449,6 +540,7 @@ public class UploaderServiceB extends Service {
             backgroundGoogleDriveServiceHelper.isDriveSpaceAvailable(tempFile, token).addOnSuccessListener(integer -> {
                 if (integer == 2) {
                     backgroundGoogleDriveServiceHelper.uploadFileToGoogleDriveV2(uploadAbleFile).addOnSuccessListener(aBoolean -> {
+                        Log.v("result", aBoolean + "");
                         queue.remove();
                         upload2();
                     }).addOnFailureListener(e -> {

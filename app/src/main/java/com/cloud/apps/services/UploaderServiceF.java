@@ -24,7 +24,7 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.lifecycle.MutableLiveData;
 
 import com.cloud.apps.R;
-import com.cloud.apps.driveApi.BackgroundGoogleDriveServiceHelper;
+import com.cloud.apps.driveApi.BGDriveService;
 import com.cloud.apps.helpers.DBHelper;
 import com.cloud.apps.models.UploadAbleFile;
 import com.cloud.apps.utils.Functions;
@@ -48,7 +48,7 @@ import java.util.TreeSet;
 public class UploaderServiceF extends Service {
 
     Context context;
-    BackgroundGoogleDriveServiceHelper backgroundGoogleDriveServiceHelper;
+    BGDriveService backgroundGoogleDriveServiceHelper;
     DBHelper dbHelper;
     SharedPreferences.Editor editor;
 
@@ -64,6 +64,8 @@ public class UploaderServiceF extends Service {
             PHONE_NAME + "/Audios",
     };
     int i = 0, count = 0, lCount = 0, iMax = 500;
+    int imageI = 0, videoI = 0, documentI = 0, audioI = 0;
+    int ai = 0;
     long maxSize = 1073741824;
     long current = 0;
     boolean readyToStop = false;
@@ -122,7 +124,7 @@ public class UploaderServiceF extends Service {
             }
         }).start();
 
-        backgroundGoogleDriveServiceHelper = new BackgroundGoogleDriveServiceHelper(context, googleDriveService);
+        backgroundGoogleDriveServiceHelper = new BGDriveService(context, googleDriveService);
         editor = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
         rootId = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).getString("root_id", "");
         Set<String> pathSet = new HashSet<>(Functions.getPaths(context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE), "selected_paths"));
@@ -140,6 +142,7 @@ public class UploaderServiceF extends Service {
             }
         } else {
             i = 0;
+            ai=(500-i)/4;
             checkImageFolder(subFolders[0], rootId);
         }
         return START_REDELIVER_INTENT;
@@ -202,6 +205,8 @@ public class UploaderServiceF extends Service {
                                 } else {
                                     backgroundGoogleDriveServiceHelper.isFilePresent(file.getPath(), id).addOnSuccessListener(aBoolean -> {
                                         if (!aBoolean) {
+                                            current += file.length();
+                                            i++;
                                             if (maxSize >= current && i <= iMax) {
                                                 queue.add(new UploadAbleFile(file.getPath(), id, null));
                                             } else {
@@ -214,7 +219,7 @@ public class UploaderServiceF extends Service {
                             }
                         }
                     }
-                });
+                }).addOnFailureListener(e->{});
     }
 
     private void check() {
@@ -258,7 +263,7 @@ public class UploaderServiceF extends Service {
                 dbHelper.close();
                 stopSelf();
             } else {
-                i = 0;
+                ai=(500-i)/4;
                 checkImageFolder(subFolders[0], rootId);
             }
         }
@@ -399,7 +404,6 @@ public class UploaderServiceF extends Service {
                 stopSelf();
             }
 
-
             if (currentFile.getPath().toLowerCase().endsWith(".jpg")
                     || currentFile.getPath().toLowerCase().endsWith(".jpeg")
                     || currentFile.getPath().toLowerCase().endsWith(".png")
@@ -416,7 +420,13 @@ public class UploaderServiceF extends Service {
                     || currentFile.getPath().toLowerCase().endsWith(".dng")
                     || currentFile.getPath().toLowerCase().endsWith(".arw")
                     || currentFile.getPath().toLowerCase().endsWith(".orf")
+
             ) {
+                if (imageI == ai) {
+                    getUploadAbleFiles();
+                    return;
+                }
+                imageI++;
                 if (imageId != null) {
                     id = imageId;
                 } else {
@@ -448,6 +458,11 @@ public class UploaderServiceF extends Service {
                     || currentFile.getPath().toLowerCase().endsWith(".flv")
                     || currentFile.getPath().toLowerCase().endsWith(".avchd")
             ) {
+                if (videoI == ai) {
+                    getUploadAbleFiles();
+                    return;
+                }
+                videoI++;
                 if (videoId != null) {
                     id = videoId;
                 } else {
@@ -477,6 +492,11 @@ public class UploaderServiceF extends Service {
                     || currentFile.getPath().toLowerCase().endsWith(".eps")
                     || currentFile.getPath().toLowerCase().endsWith(".psd")
             ) {
+                if (documentI == ai) {
+                    getUploadAbleFiles();
+                    return;
+                }
+                documentI++;
                 if (documentId != null) {
                     id = documentId;
                 } else {
@@ -491,6 +511,11 @@ public class UploaderServiceF extends Service {
                     || currentFile.getPath().toLowerCase().endsWith(".flac")
                     || currentFile.getPath().toLowerCase().endsWith(".oga")
             ) {
+                if (audioI == ai) {
+                    getUploadAbleFiles();
+                    return;
+                }
+                audioI++;
                 if (audioId != null) {
                     id = audioId;
                 } else {
@@ -502,6 +527,7 @@ public class UploaderServiceF extends Service {
                 getUploadAbleFiles();
                 return;
             }
+            current += currentFile.length();
             i++;
             if (maxSize >= current && i <= iMax) {
                 queue.add(new UploadAbleFile(currentFile.getPath(), id, null));

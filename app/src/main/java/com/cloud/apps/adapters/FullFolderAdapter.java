@@ -13,8 +13,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cloud.apps.R;
 import com.cloud.apps.databinding.AdapterFullFolderBinding;
-import com.cloud.apps.driveApi.GoogleDriveServiceHelper;
+import com.cloud.apps.driveApi.DriveService;
 import com.cloud.apps.repo.UserRepo;
+import com.google.api.services.drive.Drive;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -26,13 +27,13 @@ public class FullFolderAdapter extends RecyclerView.Adapter<FullFolderAdapter.Vi
 
     Context context;
     ArrayList<String> folders;
-    GoogleDriveServiceHelper helper;
     Map<String, Boolean> synced;
+    Drive drive;
 
-    public FullFolderAdapter(Context context, ArrayList<String> folders, GoogleDriveServiceHelper helper) {
+    public FullFolderAdapter(Context context, ArrayList<String> folders, Drive drive) {
         this.context = context;
         this.folders = folders;
-        this.helper = helper;
+        this.drive = drive;
         synced = new HashMap<>();
     }
 
@@ -76,6 +77,7 @@ public class FullFolderAdapter extends RecyclerView.Adapter<FullFolderAdapter.Vi
             });
             h.binding.syncIv.setImageResource(R.drawable.ic_baseline_sync_24);
             h.binding.syncIv.startAnimation(animation);
+            DriveService helper = new DriveService(context, drive);
             helper.uploadFolder(folders.get(p), UserRepo.getInstance(context).getRootFolderId(), fileCounter(folders.get(p)), animation, p);
         }
         h.itemView.setOnClickListener(v -> {

@@ -19,7 +19,8 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.cloud.apps.R;
 import com.cloud.apps.databinding.ActivityMainBinding;
-import com.cloud.apps.driveApi.GoogleDriveServiceHelper;
+import com.cloud.apps.driveApi.DriveDownloadService;
+import com.cloud.apps.driveApi.DriveService;
 import com.cloud.apps.fragments.BlankFragment;
 import com.cloud.apps.fragments.DashboardFragment;
 import com.cloud.apps.fragments.LogFragment;
@@ -125,7 +126,8 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }).start();
-                userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService));
+                userRepo.setDriveServiceHelper(new DriveService(this, googleDriveService));
+                userRepo.setDriveDownloadService(new DriveDownloadService(googleDriveService));
             }
         }
     }

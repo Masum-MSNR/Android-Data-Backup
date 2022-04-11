@@ -77,7 +77,7 @@ public class DriveFolderFileAdapter extends RecyclerView.Adapter<DriveFolderFile
                 return;
             h.binding.downloadIbt.setVisibility(View.INVISIBLE);
             h.binding.progressBar.setVisibility(View.VISIBLE);
-            userRepo.getDriveServiceHelper().downloadFile(new File(DOWNLOAD_PATH, selectedFile.getName()), selectedFile.getId()).addOnSuccessListener(aBoolean -> {
+            userRepo.getDriveDownloadService().downloadFile(new File(DOWNLOAD_PATH, selectedFile.getName()), selectedFile.getId()).addOnSuccessListener(aBoolean -> {
                 if (aBoolean) {
                     h.binding.downloadIbt.setImageResource(R.drawable.ic_baseline_check_box_24);
                     h.binding.downloadIbt.setVisibility(View.VISIBLE);
@@ -92,6 +92,10 @@ public class DriveFolderFileAdapter extends RecyclerView.Adapter<DriveFolderFile
         });
 
 
+    }
+
+    public ArrayList<DriveFile> getFolders() {
+        return folders;
     }
 
     @Override

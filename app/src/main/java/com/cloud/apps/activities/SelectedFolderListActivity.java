@@ -12,7 +12,7 @@ import com.cloud.apps.adapters.FullFolderAdapter;
 import com.cloud.apps.databinding.ActivitySelectedFolderListBinding;
 import com.cloud.apps.dialogs.LoadingDialog;
 import com.cloud.apps.dialogs.SelectFolderDialog;
-import com.cloud.apps.driveApi.GoogleDriveServiceHelper;
+import com.cloud.apps.driveApi.DriveService;
 import com.cloud.apps.utils.Functions;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.api.client.extensions.android.http.AndroidHttp;
@@ -35,8 +35,8 @@ public class SelectedFolderListActivity extends AppCompatActivity implements Sel
 
     ArrayList<String> folders;
     FullFolderAdapter adapter;
-
-    GoogleDriveServiceHelper driverServiceHelper;
+    Drive googleDriveService;
+    DriveService driverServiceHelper;
     LoadToast loadToast;
     SelectFolderDialog selectFolderDialog;
 
@@ -59,14 +59,14 @@ public class SelectedFolderListActivity extends AppCompatActivity implements Sel
                     GoogleAccountCredential.usingOAuth2(
                             this, Collections.singleton(DriveScopes.DRIVE_FILE));
             credential.setSelectedAccount(GoogleSignIn.getLastSignedInAccount(this).getAccount());
-            Drive googleDriveService =
+            googleDriveService =
                     new Drive.Builder(
                             AndroidHttp.newCompatibleTransport(),
                             new GsonFactory(),
                             credential)
                             .setApplicationName("Drive API Migration")
                             .build();
-            driverServiceHelper = new GoogleDriveServiceHelper(this, googleDriveService);
+            driverServiceHelper = new DriveService(this, googleDriveService);
         }
 
         binding.addFab.setOnClickListener(v -> {
@@ -74,7 +74,7 @@ public class SelectedFolderListActivity extends AppCompatActivity implements Sel
         });
 
 
-        adapter = new FullFolderAdapter(this, folders, driverServiceHelper);
+        adapter = new FullFolderAdapter(this, folders, googleDriveService);
         binding.selectedFoldersRv.setLayoutManager(new LinearLayoutManager(this));
         binding.selectedFoldersRv.setAdapter(adapter);
         loadRecyclerView();
