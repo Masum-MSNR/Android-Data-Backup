@@ -3,7 +3,7 @@ package com.cloud.apps.models;
 import android.view.animation.Animation;
 
 public class RvChildDetails {
-    int p,count;
+    int p, count;
     Animation animation;
 
     public RvChildDetails() {

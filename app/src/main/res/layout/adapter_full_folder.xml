@@ -29,9 +29,9 @@
         android:id="@+id/sync_iv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignBottom="@+id/folder_name_tv"
         android:layout_alignTop="@+id/folder_name_tv"
+        android:layout_alignBottom="@+id/folder_name_tv"
+        android:layout_alignParentEnd="true"
         android:padding="5dp"
         android:src="@drawable/ic_baseline_sync_24"
         tools:ignore="ContentDescription" />
@@ -45,7 +45,6 @@
         android:background="@color/cardview_shadow_start_color" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:visibility="gone"
         android:id="@+id/folder_items_rv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -53,6 +52,7 @@
         android:layout_marginStart="30dp"
         android:overScrollMode="never"
         android:scrollbarSize="0dp"
+        android:visibility="gone"
         tools:itemCount="4"
         tools:listitem="@layout/adapter_folder_file_list" />
 

@@ -8,10 +8,8 @@ import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-
 
 import com.cloud.apps.utils.Functions;
 
@@ -55,8 +53,6 @@ public class App extends Application {
             if (channel == null) {
                 channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
                 channel.setDescription("Sync");
-//                channel.enableVibration(true);
-//                channel.setVibrationPattern(new long[]{100, 1000, 200, 340});
                 channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
                 manager.createNotificationChannel(channel);
             }

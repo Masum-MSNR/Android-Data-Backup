@@ -84,6 +84,7 @@ public class DriveFolderFileAdapter extends RecyclerView.Adapter<DriveFolderFile
                     h.binding.progressBar.setVisibility(View.INVISIBLE);
                     File file = new File(DOWNLOAD_PATH + "/" + selectedFile.getName());
                     Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + selectedFile.getName() + " (" + getSize(file.length()) + ")" + "5");
+                    filesRepo.loadDownloadedFiles();
                 } else {
                     Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + selectedFile.getName() + "6");
                 }
@@ -99,6 +100,10 @@ public class DriveFolderFileAdapter extends RecyclerView.Adapter<DriveFolderFile
     }
 
 
+    public interface OnClick {
+        void onClick(String id);
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
         AdapterDriveFolderFileListBinding binding;
@@ -107,10 +112,6 @@ public class DriveFolderFileAdapter extends RecyclerView.Adapter<DriveFolderFile
             super(itemView);
             binding = AdapterDriveFolderFileListBinding.bind(itemView);
         }
-    }
-
-    public interface OnClick {
-        void onClick(String id);
     }
 
 }

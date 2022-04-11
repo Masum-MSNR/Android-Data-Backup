@@ -6,7 +6,6 @@ import static com.cloud.apps.utils.Consts.driveAvailAbleStorage;
 import static com.cloud.apps.utils.Consts.drivePercentage;
 
 import android.content.Context;
-import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
 

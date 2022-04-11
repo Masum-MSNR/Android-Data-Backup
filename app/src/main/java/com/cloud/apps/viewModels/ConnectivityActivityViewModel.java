@@ -1,26 +1,13 @@
 package com.cloud.apps.viewModels;
 
-import static com.cloud.apps.utils.Functions.getSize;
-
-import android.content.Context;
 import android.os.Environment;
 import android.os.StatFs;
-import android.util.Log;
 
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
-
-import com.android.volley.Request;
-import com.android.volley.toolbox.StringRequest;
-import com.cloud.apps.utils.VolleySingleton;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 
 public class ConnectivityActivityViewModel extends ViewModel {
-
 
 
     public void init() {

@@ -4,6 +4,7 @@ import static com.cloud.apps.utils.Consts.MY_PREFS_NAME;
 import static com.cloud.apps.utils.Consts.driveAvailAbleStorage;
 import static com.cloud.apps.utils.Consts.drivePercentage;
 import static com.cloud.apps.utils.Consts.mutableLogSet;
+import static com.cloud.apps.utils.Consts.token;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -15,13 +16,23 @@ import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.StringRequest;
+import com.cloud.apps.R;
 import com.cloud.apps.broadcastReceivers.TaskReceiver;
+import com.google.android.gms.auth.GoogleAuthException;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.DriveScopes;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
@@ -108,7 +119,7 @@ public class Functions {
                 long use = Long.parseLong(json.getString("usageInDrive"));
                 long totalSize = 1024 * 1024 * 1024;
                 totalSize *= 15;
-                drivePercentage.setValue((int) (((float) use / (float) totalSize)*100));
+                drivePercentage.setValue((int) (((float) use / (float) totalSize) * 100));
                 driveAvailAbleStorage.setValue(getSize(use) + "/15GB");
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -117,5 +128,27 @@ public class Functions {
             Log.e("Error", error.toString());
         });
         VolleySingleton.getInstance(context).addToRequestQueue(context, stringRequest);
+    }
+
+    public static void updateToken(Context context){
+        GoogleAccountCredential credential =
+                GoogleAccountCredential.usingOAuth2(
+                        context, Collections.singleton(DriveScopes.DRIVE_FILE));
+        credential.setSelectedAccount(GoogleSignIn.getLastSignedInAccount(context).getAccount());
+        Drive googleDriveService =
+                new Drive.Builder(
+                        AndroidHttp.newCompatibleTransport(),
+                        new GsonFactory(),
+                        credential)
+                        .setApplicationName(context.getString(R.string.app_name))
+                        .build();
+
+        new Thread(() -> {
+            try {
+                token = credential.getToken();
+            } catch (IOException | GoogleAuthException e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 }

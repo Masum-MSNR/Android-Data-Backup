@@ -9,6 +9,7 @@ import java.util.TreeSet;
 
 public class Consts {
     public static final String MY_PREFS_NAME = "pref";
+    public static final String SQLITE_DATABASE_NAME = "cloudApps";
     public static final String NOTIFICATION_CHANNEL_ID = "sync";
     public static final String NOTIFICATION_CHANNEL_NAME = "Sync";
     public static final String GLOBAL_KEY = Build.MODEL + "_" + Build.ID;
@@ -19,6 +20,7 @@ public class Consts {
     public static MutableLiveData<TreeSet<String>> mutableLogSet;
     public static MutableLiveData<String> driveAvailAbleStorage;
     public static MutableLiveData<Integer> drivePercentage;
+    public static String token;
     public static Stack<String> folderTrack;
     public static MutableLiveData<String> previousId;
 }

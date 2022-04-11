@@ -1,7 +1,7 @@
 package com.cloud.apps.models;
 
 public class DriveFile {
-    String name, id,parent;
+    String name, id, parent;
     boolean folder;
 
     public DriveFile() {

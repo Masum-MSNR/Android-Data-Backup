@@ -1,4 +1,3 @@
-
 package com.cloud.apps.fragments;
 
 import android.content.Context;
@@ -43,7 +42,7 @@ public class DashboardFragment extends Fragment {
         binding.a2Ll.setOnClickListener(v -> Toast.makeText(context, "Under development", Toast.LENGTH_SHORT).show());
         binding.a3Ll.setOnClickListener(v -> Toast.makeText(context, "Under development", Toast.LENGTH_SHORT).show());
 
-//        Consts.LAST_SYNC_TIME.observe((LifecycleOwner) context, s -> binding.lastSyncTv.setText(s.isEmpty() ? "Last Sync: Press Backup Icon" : "Last Synced: " + s));
+        Consts.LAST_SYNC_TIME.observe((LifecycleOwner) context, s -> binding.lastSyncTv.setText(s.isEmpty() ? "Last Sync: Press Backup Icon" : "Last Synced: " + s));
 
         return binding.getRoot();
     }

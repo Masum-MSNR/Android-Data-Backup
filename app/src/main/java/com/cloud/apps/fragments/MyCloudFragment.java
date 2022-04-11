@@ -91,7 +91,7 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
         Log.d(TAG, "loadDriveFiles: ");
         binding.centerPb.setVisibility(View.VISIBLE);
         files.clear();
-        userRepo.getDriveServiceHelper().getDataFromDrive(id).addOnSuccessListener(driveFiles -> {
+        userRepo.getDriveServiceHelper().getDataFromDrive().addOnSuccessListener(driveFiles -> {
             binding.notifier.setText(driveFiles.size() == 0 ? "Empty" : "");
             binding.notifier.setVisibility(driveFiles.size() == 0 ? View.VISIBLE : View.INVISIBLE);
             files.addAll(driveFiles);
@@ -141,7 +141,7 @@ public class MyCloudFragment extends Fragment implements DriveFolderFileAdapter.
                         binding.tryAgainBt.setVisibility(View.VISIBLE);
                         binding.progressBar.setVisibility(View.GONE);
                         binding.progressFrame.setVisibility(View.GONE);
-                        Toast.makeText(context,"Something went wrong! Please try again.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Something went wrong! Please try again.", Toast.LENGTH_SHORT).show();
                     }
                 });
             } else {

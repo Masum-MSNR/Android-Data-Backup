@@ -50,10 +50,10 @@ public class FolderAdapter extends RecyclerView.Adapter<FolderAdapter.ViewHolder
         h.binding.fileNameTv.setText(selectedFile.getName());
         h.binding.iconIv.setImageResource(selectedFile.isDirectory() ? R.drawable.ic_baseline_folder_24 : R.drawable.ic_baseline_insert_drive_file_24);
 
-        if(paths.contains(selectedFile.getAbsolutePath())){
+        if (paths.contains(selectedFile.getAbsolutePath())) {
             h.itemView.setBackgroundColor(ContextCompat.getColor(context, R.color.light_gray));
             h.binding.closeIbt.setVisibility(View.VISIBLE);
-        }else {
+        } else {
             h.itemView.setBackgroundColor(ContextCompat.getColor(context, R.color.white));
             h.binding.closeIbt.setVisibility(View.GONE);
         }
@@ -90,6 +90,13 @@ public class FolderAdapter extends RecyclerView.Adapter<FolderAdapter.ViewHolder
         return folders.size();
     }
 
+    public ArrayList<String> getPaths() {
+        return paths;
+    }
+
+    public interface ClickListener {
+        void onClick(String currentDir);
+    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -99,13 +106,5 @@ public class FolderAdapter extends RecyclerView.Adapter<FolderAdapter.ViewHolder
             super(itemView);
             binding = AdapterFolderFileListBinding.bind(itemView);
         }
-    }
-
-    public interface ClickListener {
-        void onClick(String currentDir);
-    }
-
-    public ArrayList<String> getPaths() {
-        return paths;
     }
 }

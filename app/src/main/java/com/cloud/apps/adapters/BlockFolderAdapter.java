@@ -75,7 +75,7 @@ public class BlockFolderAdapter extends RecyclerView.Adapter<BlockFolderAdapter.
                 h.binding.folderNameTv.setText(folderNames.get(p - 4));
                 h.itemView.setOnClickListener(v -> {
                     Intent intent = new Intent(context, ViewFolderActivity.class);
-                    intent.putExtra("path", folderNames.get(p-4));
+                    intent.putExtra("path", folderNames.get(p - 4));
                     context.startActivity(intent);
                 });
         }
@@ -94,6 +94,10 @@ public class BlockFolderAdapter extends RecyclerView.Adapter<BlockFolderAdapter.
         return 4 + folderNames.size() + 1;
     }
 
+    public interface OnPlusClick {
+        void onPlusClick();
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         AdapterFolderBlockBinding binding;
 
@@ -101,9 +105,5 @@ public class BlockFolderAdapter extends RecyclerView.Adapter<BlockFolderAdapter.
             super(itemView);
             binding = AdapterFolderBlockBinding.bind(itemView);
         }
-    }
-
-    public interface OnPlusClick {
-        void onPlusClick();
     }
 }

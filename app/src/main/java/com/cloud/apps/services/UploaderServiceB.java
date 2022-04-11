@@ -11,6 +11,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
@@ -21,7 +22,8 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.lifecycle.MutableLiveData;
 
 import com.cloud.apps.R;
-import com.cloud.apps.driveApi.GoogleDriveServiceHelper;
+import com.cloud.apps.driveApi.BackgroundGoogleDriveServiceHelper;
+import com.cloud.apps.helpers.DBHelper;
 import com.cloud.apps.models.UploadAbleFile;
 import com.cloud.apps.utils.Functions;
 import com.google.android.gms.auth.GoogleAuthException;
@@ -34,7 +36,6 @@ import com.google.api.services.drive.DriveScopes;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -44,23 +45,26 @@ import java.util.TreeSet;
 
 public class UploaderServiceB extends Service {
 
-    GoogleDriveServiceHelper driverServiceHelper;
-    SharedPreferences.Editor editor;
     Context context;
+    BackgroundGoogleDriveServiceHelper backgroundGoogleDriveServiceHelper;
+    DBHelper dbHelper;
+    SharedPreferences.Editor editor;
+
     Queue<UploadAbleFile> queue;
-    String token;
-    int count = 0, lCount = 0;
-    ArrayList<UploadAbleFile> images;
-    ArrayList<UploadAbleFile> videos;
-    ArrayList<UploadAbleFile> documents;
-    ArrayList<UploadAbleFile> audios;
-    String rootId;
+    Queue<File> allFiles;
+
+
+    String rootId, token, imageId, videoId, documentId, audioId;
     String[] subFolders = new String[]{
             PHONE_NAME + "/Images",
             PHONE_NAME + "/Videos",
             PHONE_NAME + "/Documents",
             PHONE_NAME + "/Audios",
     };
+    int i = 0, count = 0, lCount = 0, iMax = 500;
+    long maxSize = 1073741824;
+    long current = 0;
+    boolean readyToStop = false;
 
     @Override
     public void onCreate() {
@@ -69,12 +73,21 @@ public class UploaderServiceB extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        new CountDownTimer(3600000, 3600) {
+            @Override
+            public void onTick(long l) {
+
+            }
+
+            @Override
+            public void onFinish() {
+                stopSelf();
+            }
+        }.start();
         context = getApplicationContext();
+        dbHelper = new DBHelper(context);
         queue = new LinkedList<>();
-        images = new ArrayList<>();
-        videos = new ArrayList<>();
-        documents = new ArrayList<>();
-        audios = new ArrayList<>();
+        allFiles = new LinkedList<>();
         TreeSet<String> logSet = new TreeSet<>(context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).getStringSet("logs", new TreeSet<>()));
         mutableLogSet = new MutableLiveData<>(logSet);
 
@@ -98,23 +111,16 @@ public class UploaderServiceB extends Service {
             }
         }).start();
 
-        driverServiceHelper = new GoogleDriveServiceHelper(context, googleDriveService, true);
+        backgroundGoogleDriveServiceHelper = new BackgroundGoogleDriveServiceHelper(context, googleDriveService);
         editor = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
+        rootId = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).getString("root_id", "");
         Set<String> pathSet = new HashSet<>(Functions.getPaths(context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE), "selected_paths"));
         pathSet.addAll(Functions.getPaths(context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE), "c_selected_paths"));
+
         for (String path : pathSet) {
             totalFileCount(path);
         }
-        loadImages(Environment.getExternalStorageDirectory().getPath());
-        Log.v("Stage_1", "called");
-        loadVideos(Environment.getExternalStorageDirectory().getPath());
-        Log.v("Stage_2", "called");
-        loadDocuments(Environment.getExternalStorageDirectory().getPath());
-        Log.v("Stage_3", "called");
-        loadAudios(Environment.getExternalStorageDirectory().getPath());
-        Log.v("Stage_4", "called");
-        rootId = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).getString("root_id", "");
-        Log.v("Stage_5", "called");
+
         if (pathSet.size() != 0) {
             for (String path : pathSet) {
                 if (rootId.isEmpty())
@@ -122,20 +128,19 @@ public class UploaderServiceB extends Service {
                 uploadFolder(path, rootId);
             }
         } else {
-            uploadCommon();
+            i = 0;
+            checkImageFolder(subFolders[0], rootId);
         }
-        Log.v("Stage_6", "called");
         return START_REDELIVER_INTENT;
     }
 
     private void uploadFolder(String path, String parentId) {
-        Log.v("path", path);
         File root = new File(path);
         String folderName = root.getName();
-        driverServiceHelper.isFolderPresent(folderName, parentId)
+        backgroundGoogleDriveServiceHelper.isFolderPresent(folderName, parentId)
                 .addOnSuccessListener(id -> {
                     if (id.isEmpty()) {
-                        driverServiceHelper.createNewFolder(folderName, parentId)
+                        backgroundGoogleDriveServiceHelper.createNewFolder(folderName, parentId)
                                 .addOnSuccessListener(folderId -> {
                                     if (!folderId.isEmpty()) {
                                         Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is created successfully" + "1");
@@ -145,24 +150,20 @@ public class UploaderServiceB extends Service {
                                                 if (file.isDirectory()) {
                                                     uploadFolder(file.getPath(), folderId);
                                                 } else {
-                                                    driverServiceHelper.isFilePresent(file.getPath(), folderId).addOnSuccessListener(aBoolean -> {
+                                                    backgroundGoogleDriveServiceHelper.isFilePresent(file.getPath(), folderId).addOnSuccessListener(aBoolean -> {
                                                         if (!aBoolean) {
-                                                            queue.add(new UploadAbleFile(file.getPath(), folderId, null));
-                                                        } else {
-                                                            String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                                                            editor.putString("last_sync_time", lastSyncedTime);
-                                                            editor.apply();
-                                                            showNotification(lastSyncedTime);
+                                                            current += file.length();
+                                                            i++;
+                                                            if (maxSize >= current && i <= iMax) {
+                                                                queue.add(new UploadAbleFile(file.getPath(), folderId, null));
+                                                            } else {
+                                                                readyToStop = true;
+                                                            }
                                                         }
                                                         check();
                                                     }).addOnFailureListener(e -> check());
                                                 }
                                             }
-                                        } else {
-                                            String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                                            editor.putString("last_sync_time", lastSyncedTime);
-                                            editor.apply();
-                                            showNotification(lastSyncedTime);
                                         }
                                     } else {
                                         Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " failed to create" + "2");
@@ -175,24 +176,18 @@ public class UploaderServiceB extends Service {
                                 if (file.isDirectory()) {
                                     uploadFolder(file.getPath(), id);
                                 } else {
-                                    driverServiceHelper.isFilePresent(file.getPath(), id).addOnSuccessListener(aBoolean -> {
+                                    backgroundGoogleDriveServiceHelper.isFilePresent(file.getPath(), id).addOnSuccessListener(aBoolean -> {
                                         if (!aBoolean) {
-                                            queue.add(new UploadAbleFile(file.getPath(), id, null));
-                                        } else {
-                                            String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                                            editor.putString("last_sync_time", lastSyncedTime);
-                                            editor.apply();
-                                            showNotification(lastSyncedTime);
+                                            if (maxSize >= current && i <= iMax) {
+                                                queue.add(new UploadAbleFile(file.getPath(), id, null));
+                                            } else {
+                                                readyToStop = true;
+                                            }
                                         }
                                         check();
                                     }).addOnFailureListener(e -> check());
                                 }
                             }
-                        } else {
-                            String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                            editor.putString("last_sync_time", lastSyncedTime);
-                            editor.apply();
-                            showNotification(lastSyncedTime);
                         }
                     }
                 });
@@ -200,9 +195,7 @@ public class UploaderServiceB extends Service {
 
     private void check() {
         lCount++;
-        Log.v(count + "", lCount + "");
-        if (count == lCount) {
-            Log.v("Ssss", "ok");
+        if (count == lCount || readyToStop) {
             upload();
         }
 
@@ -210,12 +203,11 @@ public class UploaderServiceB extends Service {
 
     private void upload() {
         if (!queue.isEmpty()) {
-            Log.v("que", queue.size() + "");
             UploadAbleFile uploadAbleFile = queue.peek();
-            File tempFile = new File(uploadAbleFile.getFilePath());
-            driverServiceHelper.isDriveSpaceAvailable(tempFile, token).addOnSuccessListener(integer -> {
+            java.io.File tempFile = new java.io.File(uploadAbleFile.getFilePath());
+            backgroundGoogleDriveServiceHelper.isDriveSpaceAvailable(tempFile, token).addOnSuccessListener(integer -> {
                 if (integer == 2) {
-                    driverServiceHelper.uploadFileToGoogleDriveV2(uploadAbleFile).addOnSuccessListener(aBoolean -> {
+                    backgroundGoogleDriveServiceHelper.uploadFileToGoogleDriveV2(uploadAbleFile).addOnSuccessListener(aBoolean -> {
                         queue.remove();
                         upload();
                         showNotification(convertedTime(System.currentTimeMillis()));
@@ -228,6 +220,7 @@ public class UploaderServiceB extends Service {
                     showNotification(convertedTime(System.currentTimeMillis()));
                 } else {
                     showNotification();
+                    dbHelper.close();
                     stopSelf();
                 }
             }).addOnFailureListener(e -> {
@@ -235,121 +228,245 @@ public class UploaderServiceB extends Service {
                 showNotification(convertedTime(System.currentTimeMillis()));
             });
         } else {
-            uploadCommon();
-        }
-    }
-
-    private void uploadCommon() {
-        count = images.size() + videos.size() + documents.size() + audios.size();
-        lCount = 0;
-        queue.clear();
-        for (String s : subFolders) {
-            if (s.equals(PHONE_NAME + "/Images")) {
-                uploadSubFolder(s, rootId, images);
-            } else if (s.equals(PHONE_NAME + "/Videos")) {
-                uploadSubFolder(s, rootId, videos);
-            } else if (s.equals(PHONE_NAME + "/Documents")) {
-                uploadSubFolder(s, rootId, documents);
-            } else if (s.equals(PHONE_NAME + "/Audios")) {
-                uploadSubFolder(s, rootId, audios);
+            if (readyToStop) {
+                showNotification(convertedTime(System.currentTimeMillis()));
+                dbHelper.close();
+                stopSelf();
+            } else {
+                i = 0;
+                checkImageFolder(subFolders[0], rootId);
             }
         }
     }
 
-    private void uploadSubFolder(String folderName, String parentId, ArrayList<UploadAbleFile> files) {
-        driverServiceHelper.isFolderPresent(folderName, parentId)
+
+    private void checkImageFolder(String folderName, String parentId) {
+        backgroundGoogleDriveServiceHelper.isFolderPresent(folderName, parentId)
                 .addOnSuccessListener(id -> {
                     if (id.isEmpty()) {
-                        driverServiceHelper.createNewFolder(folderName, parentId)
+                        backgroundGoogleDriveServiceHelper.createNewFolder(folderName, parentId)
                                 .addOnSuccessListener(folderId -> {
                                     if (!folderId.isEmpty()) {
                                         Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is created successfully" + "1");
-                                        if (files != null && files.size() > 0) {
-                                            for (UploadAbleFile file : files) {
-                                                driverServiceHelper.isFilePresent(file.getFilePath(), folderId).addOnSuccessListener(aBoolean -> {
-                                                    if (!aBoolean) {
-                                                        queue.add(new UploadAbleFile(file.getFilePath(), folderId, null));
-                                                    } else {
-                                                        String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                                                        editor.putString("last_sync_time", lastSyncedTime);
-                                                        editor.apply();
-                                                        showNotification(lastSyncedTime);
-                                                    }
-                                                    check2();
-                                                }).addOnFailureListener(e -> check2());
-                                            }
-                                        } else {
-                                            String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                                            editor.putString("last_sync_time", lastSyncedTime);
-                                            editor.apply();
-                                            showNotification(lastSyncedTime);
-                                        }
+                                        imageId = folderId;
                                     } else {
                                         Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " failed to create" + "2");
                                     }
-                                });
+                                    checkVideoFolder(subFolders[1], rootId);
+                                }).addOnFailureListener(e -> {
+                            checkVideoFolder(subFolders[1], rootId);
+                        });
                     } else {
-                        if (files != null && files.size() > 0) {
-                            for (UploadAbleFile file : files) {
-                                driverServiceHelper.isFilePresent(file.getFilePath(), id).addOnSuccessListener(aBoolean -> {
-                                    if (!aBoolean) {
-                                        queue.add(new UploadAbleFile(file.getFilePath(), id, null));
-                                    } else {
-                                        String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                                        editor.putString("last_sync_time", lastSyncedTime);
-                                        editor.apply();
-                                        showNotification(lastSyncedTime);
-                                    }
-                                    check2();
-                                }).addOnFailureListener(e -> check2());
-                            }
-                        } else {
-                            String lastSyncedTime = convertedTime(System.currentTimeMillis());
-                            editor.putString("last_sync_time", lastSyncedTime);
-                            editor.apply();
-                            showNotification(lastSyncedTime);
-                        }
+                        imageId = id;
+                        checkVideoFolder(subFolders[1], rootId);
                     }
-                });
+                }).addOnFailureListener(e -> {
+            checkVideoFolder(subFolders[1], rootId);
+        });
     }
 
-    private void check2() {
-        lCount++;
-        Log.v(count + "", lCount + "");
-        if (count == lCount) {
-            Log.v("MMMM", "ok");
+    private void checkVideoFolder(String folderName, String parentId) {
+        backgroundGoogleDriveServiceHelper.isFolderPresent(folderName, parentId)
+                .addOnSuccessListener(id -> {
+                    if (id.isEmpty()) {
+                        backgroundGoogleDriveServiceHelper.createNewFolder(folderName, parentId)
+                                .addOnSuccessListener(folderId -> {
+                                    if (!folderId.isEmpty()) {
+                                        Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is created successfully" + "1");
+                                        videoId = folderId;
+                                    } else {
+                                        Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " failed to create" + "2");
+                                    }
+                                    checkDocumentFolder(subFolders[2], rootId);
+                                }).addOnFailureListener(e -> {
+                            checkDocumentFolder(subFolders[2], rootId);
+                        });
+                    } else {
+                        videoId = id;
+                        checkDocumentFolder(subFolders[2], rootId);
+                    }
+                }).addOnFailureListener(e -> {
+            checkDocumentFolder(subFolders[2], rootId);
+        });
+    }
+
+    private void checkDocumentFolder(String folderName, String parentId) {
+        backgroundGoogleDriveServiceHelper.isFolderPresent(folderName, parentId)
+                .addOnSuccessListener(id -> {
+                    if (id.isEmpty()) {
+                        backgroundGoogleDriveServiceHelper.createNewFolder(folderName, parentId)
+                                .addOnSuccessListener(folderId -> {
+                                    if (!folderId.isEmpty()) {
+                                        Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is created successfully" + "1");
+                                        documentId = folderId;
+                                    } else {
+                                        Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " failed to create" + "2");
+                                    }
+                                    checkAudioFolder(subFolders[3], rootId);
+                                }).addOnFailureListener(e -> {
+                            checkAudioFolder(subFolders[3], rootId);
+                        });
+                    } else {
+                        documentId = id;
+                        checkAudioFolder(subFolders[3], rootId);
+                    }
+                }).addOnFailureListener(e -> {
+            checkAudioFolder(subFolders[3], rootId);
+        });
+    }
+
+    private void checkAudioFolder(String folderName, String parentId) {
+        backgroundGoogleDriveServiceHelper.isFolderPresent(folderName, parentId)
+                .addOnSuccessListener(id -> {
+                    if (id.isEmpty()) {
+                        backgroundGoogleDriveServiceHelper.createNewFolder(folderName, parentId)
+                                .addOnSuccessListener(folderId -> {
+                                    if (!folderId.isEmpty()) {
+                                        Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is created successfully" + "1");
+                                        audioId = folderId;
+                                    } else {
+                                        Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " failed to create" + "2");
+                                    }
+                                    loadAllFiles(Environment.getExternalStorageDirectory().getPath());
+                                    getUploadAbleFiles();
+                                }).addOnFailureListener(e -> {
+                            loadAllFiles(Environment.getExternalStorageDirectory().getPath());
+                            getUploadAbleFiles();
+                        });
+                    } else {
+                        audioId = id;
+                        loadAllFiles(Environment.getExternalStorageDirectory().getPath());
+                        getUploadAbleFiles();
+                    }
+                }).addOnFailureListener(e -> {
+            loadAllFiles(Environment.getExternalStorageDirectory().getPath());
+            getUploadAbleFiles();
+        });
+    }
+
+    private void loadAllFiles(String path) {
+        File root = new File(path);
+        File[] files = root.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    loadAllFiles(file.getPath());
+                } else {
+                    allFiles.add(file);
+                }
+            }
+        }
+    }
+
+    private void getUploadAbleFiles() {
+        if (!allFiles.isEmpty() && !readyToStop) {
+            File currentFile = allFiles.remove();
+            Log.v("count", currentFile.getName() + " " + i);
+            String id = null;
+            if (dbHelper.isFileUploaded(currentFile.getPath())) {
+                getUploadAbleFiles();
+                return;
+            }
+
+            if (imageId == null && videoId == null && documentId == null && audioId == null) {
+                showNotification(convertedTime(System.currentTimeMillis()));
+                dbHelper.close();
+                stopSelf();
+            }
+
+
+            if (currentFile.getPath().toLowerCase().endsWith(".jpg")
+                    || currentFile.getPath().toLowerCase().endsWith(".jpeg")
+                    || currentFile.getPath().toLowerCase().endsWith(".png")
+            ) {
+                if (imageId != null) {
+                    id = imageId;
+                } else {
+                    getUploadAbleFiles();
+                    return;
+                }
+            } else if (currentFile.getPath().toLowerCase().endsWith(".mp4")
+                    || currentFile.getPath().toLowerCase().endsWith(".mkv")
+                    || currentFile.getPath().toLowerCase().endsWith(".webm")
+                    || currentFile.getPath().toLowerCase().endsWith(".mov")
+                    || currentFile.getPath().toLowerCase().endsWith(".flv")
+                    || currentFile.getPath().toLowerCase().endsWith(".avchd")
+            ) {
+                if (videoId != null) {
+                    id = videoId;
+                } else {
+                    getUploadAbleFiles();
+                    return;
+                }
+            } else if (currentFile.getPath().toLowerCase().endsWith(".pdf")
+                    || currentFile.getPath().toLowerCase().endsWith(".docx")
+                    || currentFile.getPath().toLowerCase().endsWith(".html")
+                    || currentFile.getPath().toLowerCase().endsWith(".htm")
+                    || currentFile.getPath().toLowerCase().endsWith(".xls")
+                    || currentFile.getPath().toLowerCase().endsWith(".xlsx")
+                    || currentFile.getPath().toLowerCase().endsWith(".txt")
+                    || currentFile.getPath().toLowerCase().endsWith(".ppt")
+                    || currentFile.getPath().toLowerCase().endsWith(".pptx")
+            ) {
+                if (documentId != null) {
+                    id = documentId;
+                } else {
+                    getUploadAbleFiles();
+                    return;
+                }
+            } else if (currentFile.getPath().toLowerCase().endsWith(".mp3")
+                    || currentFile.getPath().toLowerCase().endsWith(".m4a")
+                    || currentFile.getPath().toLowerCase().endsWith(".wav")
+            ) {
+                if (audioId != null) {
+                    id = audioId;
+                } else {
+                    getUploadAbleFiles();
+                    return;
+                }
+            }
+            if (id == null) {
+                getUploadAbleFiles();
+                return;
+            }
+            i++;
+            if (maxSize >= current && i <= iMax) {
+                queue.add(new UploadAbleFile(currentFile.getPath(), id, null));
+            } else {
+                readyToStop = true;
+            }
+            getUploadAbleFiles();
+        } else {
             upload2();
         }
     }
 
+
     private void upload2() {
         if (!queue.isEmpty()) {
-            Log.v("AAA", queue.size() + "");
             UploadAbleFile uploadAbleFile = queue.peek();
-            File tempFile = new File(uploadAbleFile.getFilePath());
-            driverServiceHelper.isDriveSpaceAvailable(tempFile, token).addOnSuccessListener(integer -> {
+            java.io.File tempFile = new java.io.File(uploadAbleFile.getFilePath());
+            backgroundGoogleDriveServiceHelper.isDriveSpaceAvailable(tempFile, token).addOnSuccessListener(integer -> {
                 if (integer == 2) {
-                    Log.v("Path", uploadAbleFile.getFilePath() + "  " + uploadAbleFile.getFolderId());
-                    driverServiceHelper.uploadFileToGoogleDriveV2(uploadAbleFile).addOnSuccessListener(aBoolean -> {
+                    backgroundGoogleDriveServiceHelper.uploadFileToGoogleDriveV2(uploadAbleFile).addOnSuccessListener(aBoolean -> {
                         queue.remove();
                         upload2();
-                        showNotification(convertedTime(System.currentTimeMillis()));
                     }).addOnFailureListener(e -> {
                         upload2();
-                        showNotification(convertedTime(System.currentTimeMillis()));
                     });
                 } else if (integer == 4 || integer == 1) {
                     upload2();
-                    showNotification(convertedTime(System.currentTimeMillis()));
                 } else {
                     showNotification();
+                    dbHelper.close();
                     stopSelf();
                 }
             }).addOnFailureListener(e -> {
                 upload2();
-                showNotification(convertedTime(System.currentTimeMillis()));
             });
         } else {
+            showNotification(convertedTime(System.currentTimeMillis()));
+            dbHelper.close();
             stopSelf();
         }
     }
@@ -387,113 +504,6 @@ public class UploaderServiceB extends Service {
                 count++;
             }
         }
-    }
-
-    public void loadImages(String path) {
-        Log.v("loadImages", "called");
-        File root = new File(path);
-        File[] filesAndFolders = root.listFiles();
-        int i = 0;
-        if (filesAndFolders != null) {
-            for (File file : filesAndFolders) {
-                i++;
-                if (file.isDirectory()) {
-                    if (!file.getName().startsWith("."))
-                        loadImages(file.getPath());
-                } else {
-                    if (file.getPath().toLowerCase().endsWith(".jpg")
-                            || file.getPath().toLowerCase().endsWith(".jpeg")
-                            || file.getPath().toLowerCase().endsWith(".png")
-                    )
-                        images.add(makeUploadAbleFile(file));
-                }
-                if (i == 10)
-                    break;
-            }
-        }
-    }
-
-    public void loadVideos(String path) {
-        Log.v("loadVideos", "called");
-        File root = new File(path);
-        File[] filesAndFolders = root.listFiles();
-        int i = 0;
-        if (filesAndFolders != null) {
-            for (File file : filesAndFolders) {
-                i++;
-                if (file.isDirectory()) {
-                    if (!file.getName().startsWith("."))
-                        loadVideos(file.getPath());
-                } else {
-                    if (file.getPath().toLowerCase().endsWith(".mp4")
-                            || file.getPath().toLowerCase().endsWith(".mkv")
-                            || file.getPath().toLowerCase().endsWith(".webm")
-                            || file.getPath().toLowerCase().endsWith(".mov")
-                            || file.getPath().toLowerCase().endsWith(".flv")
-                            || file.getPath().toLowerCase().endsWith(".avchd")
-                    )
-                        videos.add(makeUploadAbleFile(file));
-                }
-                if (i == 10)
-                    break;
-            }
-        }
-    }
-
-    public void loadAudios(String path) {
-        File root = new File(path);
-        File[] filesAndFolders = root.listFiles();
-        int i = 0;
-        if (filesAndFolders != null) {
-            for (File file : filesAndFolders) {
-                i++;
-                if (file.isDirectory()) {
-                    if (!file.getName().startsWith("."))
-                        loadAudios(file.getPath());
-                } else {
-                    if (file.getPath().toLowerCase().endsWith(".mp3")
-                            || file.getPath().toLowerCase().endsWith(".m4a")
-                            || file.getPath().toLowerCase().endsWith(".wav")
-                    )
-                        documents.add(makeUploadAbleFile(file));
-                }
-                if (i == 10)
-                    break;
-            }
-        }
-    }
-
-    public void loadDocuments(String path) {
-        File root = new File(path);
-        File[] filesAndFolders = root.listFiles();
-        int i = 0;
-        if (filesAndFolders != null) {
-            for (File file : filesAndFolders) {
-                i++;
-                if (file.isDirectory()) {
-                    if (!file.getName().startsWith("."))
-                        loadDocuments(file.getPath());
-                } else {
-                    if (file.getPath().toLowerCase().endsWith(".pdf")
-                            || file.getPath().toLowerCase().endsWith(".docx")
-                            || file.getPath().toLowerCase().endsWith(".html")
-                            || file.getPath().toLowerCase().endsWith(".htm")
-                            || file.getPath().toLowerCase().endsWith(".xls")
-                            || file.getPath().toLowerCase().endsWith(".xlsx")
-                            || file.getPath().toLowerCase().endsWith(".txt")
-                            || file.getPath().toLowerCase().endsWith(".ppt")
-                            || file.getPath().toLowerCase().endsWith(".pptx")
-                    )
-                        audios.add(makeUploadAbleFile(file));
-                }
-                if (i == 10)
-                    break;
-            }
-        }
-    }
-
-    private UploadAbleFile makeUploadAbleFile(File file) {
-        return new UploadAbleFile(file.getPath(), file.getParent(), null);
     }
 
     @Nullable

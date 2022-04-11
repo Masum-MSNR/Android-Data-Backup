@@ -79,7 +79,7 @@ public class SelectFolderDialog extends AppCompatDialogFragment implements Folde
                 Toast.makeText(context, "Please select any folder. Tap and hold to select.", Toast.LENGTH_SHORT).show();
                 return;
             }
-            listener.onSelect(adapter.getPaths(),type);
+            listener.onSelect(adapter.getPaths(), type);
             dismiss();
         });
 
@@ -95,7 +95,7 @@ public class SelectFolderDialog extends AppCompatDialogFragment implements Folde
         folders.clear();
         if (filesAndFolders != null) {
             for (File file : filesAndFolders) {
-                if (file.isDirectory()&&!file.getName().startsWith(".")) {
+                if (file.isDirectory() && !file.getName().startsWith(".")) {
                     folders.add(file);
                 }
             }

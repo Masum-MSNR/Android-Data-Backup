@@ -55,6 +55,23 @@ public class MainActivity extends AppCompatActivity {
     ActivityMainBinding binding;
     Fragment currentFragment;
     int navMenuId;
+    private final NavigationBarView.OnItemSelectedListener listener = item -> {
+        if (item.getItemId() == R.id.dashboard) {
+            currentFragment = new DashboardFragment(MainActivity.this);
+            navMenuId = R.id.dashboard;
+        } else if (item.getItemId() == R.id.my_cloud) {
+            currentFragment = new MyCloudFragment(MainActivity.this);
+            navMenuId = R.id.my_cloud;
+        } else if (item.getItemId() == R.id.log) {
+            currentFragment = new LogFragment(MainActivity.this);
+            navMenuId = R.id.log;
+        } else {
+            currentFragment = new BlankFragment();
+        }
+        getSupportActionBar().setTitle(item.getTitle());
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, currentFragment).commit();
+        return true;
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,14 +118,14 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         getAbout(this, credential.getToken());
                         userRepo.setToken(credential.getToken());
-                        SharedPreferences.Editor editor=getSharedPreferences(MY_PREFS_NAME,MODE_PRIVATE).edit();
-                        editor.putString("token",credential.getToken());
+                        SharedPreferences.Editor editor = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
+                        editor.putString("token", credential.getToken());
                         editor.apply();
                     } catch (IOException | GoogleAuthException e) {
                         e.printStackTrace();
                     }
                 }).start();
-                userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService,false));
+                userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService));
             }
         }
     }
@@ -123,24 +140,6 @@ public class MainActivity extends AppCompatActivity {
             filesRepo = FilesRepo.getInstance();
         }
     }
-
-    private final NavigationBarView.OnItemSelectedListener listener = item -> {
-        if (item.getItemId() == R.id.dashboard) {
-            currentFragment = new DashboardFragment(MainActivity.this);
-            navMenuId = R.id.dashboard;
-        } else if (item.getItemId() == R.id.my_cloud) {
-            currentFragment = new MyCloudFragment(MainActivity.this);
-            navMenuId = R.id.my_cloud;
-        } else if (item.getItemId() == R.id.log) {
-            currentFragment = new LogFragment(MainActivity.this);
-            navMenuId = R.id.log;
-        } else {
-            currentFragment = new BlankFragment();
-        }
-        getSupportActionBar().setTitle(item.getTitle());
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, currentFragment).commit();
-        return true;
-    };
 
     private void isFolderExits() {
         File file = new File(APP_PATH);

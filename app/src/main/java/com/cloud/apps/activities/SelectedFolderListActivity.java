@@ -30,19 +30,15 @@ import java.util.Set;
 
 public class SelectedFolderListActivity extends AppCompatActivity implements SelectFolderDialog.SelectListener {
 
-    private String TAG = "SelectedFolderListActivity";
+    public static LoadingDialog loadingDialog;
     ActivitySelectedFolderListBinding binding;
 
     ArrayList<String> folders;
     FullFolderAdapter adapter;
 
     GoogleDriveServiceHelper driverServiceHelper;
-
-    public static LoadingDialog loadingDialog;
-
     LoadToast loadToast;
     SelectFolderDialog selectFolderDialog;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +66,7 @@ public class SelectedFolderListActivity extends AppCompatActivity implements Sel
                             credential)
                             .setApplicationName("Drive API Migration")
                             .build();
-            driverServiceHelper = new GoogleDriveServiceHelper(this, googleDriveService, false);
+            driverServiceHelper = new GoogleDriveServiceHelper(this, googleDriveService);
         }
 
         binding.addFab.setOnClickListener(v -> {

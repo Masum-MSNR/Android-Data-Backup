@@ -6,10 +6,21 @@ import android.os.Parcelable;
 // GoogleDriveFileHolder class for storing the google drive file metadata
 public class GoogleDriveFileHolder implements Parcelable {
 
+    public static final Creator<GoogleDriveFileHolder> CREATOR
+            = new Creator<GoogleDriveFileHolder>() {
+        public GoogleDriveFileHolder createFromParcel(Parcel in) {
+            return new GoogleDriveFileHolder(in);
+        }
+
+        public GoogleDriveFileHolder[] newArray(int size) {
+            return new GoogleDriveFileHolder[size];
+        }
+    };
     private String id;
     private String name;
 
-    public GoogleDriveFileHolder(){}
+    public GoogleDriveFileHolder() {
+    }
 
     private GoogleDriveFileHolder(Parcel in) {
         id = in.readString();
@@ -42,15 +53,4 @@ public class GoogleDriveFileHolder implements Parcelable {
         dest.writeString(id);
         dest.writeString(name);
     }
-
-    public static final Creator<GoogleDriveFileHolder> CREATOR
-            = new Creator<GoogleDriveFileHolder>() {
-        public GoogleDriveFileHolder createFromParcel(Parcel in) {
-            return new GoogleDriveFileHolder(in);
-        }
-
-        public GoogleDriveFileHolder[] newArray(int size) {
-            return new GoogleDriveFileHolder[size];
-        }
-    };
 }

@@ -1,8 +1,8 @@
 package com.cloud.apps.repo;
 
 import static com.cloud.apps.utils.Consts.DOWNLOAD_PATH;
-import static com.cloud.apps.utils.Consts.previousId;
 import static com.cloud.apps.utils.Consts.folderTrack;
+import static com.cloud.apps.utils.Consts.previousId;
 
 import androidx.lifecycle.MutableLiveData;
 
@@ -32,7 +32,7 @@ public class FilesRepo {
         downloadedFileNames.clear();
         File root = new File(DOWNLOAD_PATH);
         File[] files = root.listFiles();
-        if(files!=null){
+        if (files != null) {
             for (File file : files) {
                 downloadedFileNames.add(file.getName());
             }

@@ -100,16 +100,6 @@ public class FullFolderAdapter extends RecyclerView.Adapter<FullFolderAdapter.Vi
         return folders.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-
-        AdapterFullFolderBinding binding;
-
-        public ViewHolder(View itemView) {
-            super(itemView);
-            binding = AdapterFullFolderBinding.bind(itemView);
-        }
-    }
-
     private int fileCounter(String path) {
         int count = 0;
         File root = new File(path);
@@ -121,5 +111,15 @@ public class FullFolderAdapter extends RecyclerView.Adapter<FullFolderAdapter.Vi
                 count++;
         }
         return count;
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+
+        AdapterFullFolderBinding binding;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            binding = AdapterFullFolderBinding.bind(itemView);
+        }
     }
 }

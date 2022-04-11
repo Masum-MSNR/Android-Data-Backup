@@ -189,7 +189,7 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
                 e.printStackTrace();
             }
         }).start();
-        userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService, false));
+        userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService));
         userRepo.getLogin().setValue(true);
         isConnecting.setValue(true);
 
@@ -253,7 +253,7 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
                             e.printStackTrace();
                         }
                     }).start();
-                    userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService, false));
+                    userRepo.setDriveServiceHelper(new GoogleDriveServiceHelper(this, googleDriveService));
                     userRepo.getLogin().setValue(true);
                     isConnecting.setValue(true);
                     checkRootFolder();

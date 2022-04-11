@@ -1,4 +1,3 @@
-
 package com.cloud.apps.adapters;
 
 import android.content.Context;

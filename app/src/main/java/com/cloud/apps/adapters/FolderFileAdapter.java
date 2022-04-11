@@ -64,6 +64,10 @@ public class FolderFileAdapter extends RecyclerView.Adapter<FolderFileAdapter.Vi
     }
 
 
+    public interface OnClick {
+        void onClick(String currentDir);
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
         AdapterFolderFileListBinding binding;
@@ -72,10 +76,6 @@ public class FolderFileAdapter extends RecyclerView.Adapter<FolderFileAdapter.Vi
             super(itemView);
             binding = AdapterFolderFileListBinding.bind(itemView);
         }
-    }
-
-    public interface OnClick {
-        void onClick(String currentDir);
     }
 
 }

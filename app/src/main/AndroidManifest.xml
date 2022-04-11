@@ -21,19 +21,16 @@
         android:theme="@style/Theme.FileManagerDemo.WithActionBar">
         <activity
             android:name=".activities.ViewFolderActivity"
-            android:exported="true"></activity>
+            android:exported="true" />
         <activity
             android:name=".activities.SpecificFileActivity"
             android:exported="true" />
         <activity
             android:name=".activities.ConnectivityActivity"
-            android:exported="true"></activity>
+            android:exported="true" />
         <activity
             android:name=".activities.SelectedFolderListActivity"
             android:exported="true" />
-        <activity
-            android:name=".activities.SettingsActivity"
-            android:exported="false" />
         <activity
             android:name=".activities.MainActivity"
             android:exported="true"
