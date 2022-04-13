@@ -34,7 +34,7 @@ public class DriveDownloadService {
      */
     public Task<ArrayList<DriveFile>> getDataFromDrive(String parentId) {
         final TaskCompletionSource<ArrayList<DriveFile>> tcs = new TaskCompletionSource<>();
-        ExecutorService service = Executors.newFixedThreadPool(2);
+        ExecutorService service = Executors.newFixedThreadPool(1);
         ArrayList<DriveFile> files = new ArrayList<>();
 
         service.execute(() -> {
@@ -74,7 +74,7 @@ public class DriveDownloadService {
      */
     public Task<Boolean> downloadFile(final java.io.File fileSaveLocation, final String fileId) {
         final TaskCompletionSource<Boolean> tcs = new TaskCompletionSource<>();
-        ExecutorService service = Executors.newFixedThreadPool(2);
+        ExecutorService service = Executors.newFixedThreadPool(1);
         service.execute(() -> {
             boolean result;
             try {

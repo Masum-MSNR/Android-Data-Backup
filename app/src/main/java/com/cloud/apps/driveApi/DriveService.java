@@ -25,7 +25,6 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.StringRequest;
 import com.cloud.apps.R;
 import com.cloud.apps.helpers.DBHelper;
-import com.cloud.apps.models.DriveFile;
 import com.cloud.apps.models.RvChildDetails;
 import com.cloud.apps.models.UploadAbleFile;
 import com.cloud.apps.repo.UserRepo;
@@ -43,11 +42,8 @@ import com.google.api.services.drive.model.FileList;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
@@ -122,7 +118,7 @@ public class DriveService {
      */
     public Task<Boolean> isFilePresent(String filePath, String folderId) {
         final TaskCompletionSource<Boolean> tcs = new TaskCompletionSource<>();
-        ExecutorService service = Executors.newFixedThreadPool(2);
+        ExecutorService service = Executors.newFixedThreadPool(1);
 
         service.execute(() -> {
             boolean result = false;
@@ -188,7 +184,7 @@ public class DriveService {
      */
     public Task<Boolean> uploadFileToGoogleDrive(UploadAbleFile file) {
         final TaskCompletionSource<Boolean> tcs = new TaskCompletionSource<>();
-        ExecutorService service = Executors.newFixedThreadPool(19);
+        ExecutorService service = Executors.newFixedThreadPool(1);
 
         AtomicBoolean aResult = new AtomicBoolean(false);
 
@@ -231,7 +227,7 @@ public class DriveService {
      */
     public Task<Integer> isDriveSpaceAvailable(java.io.File file, String token) {
         final TaskCompletionSource<Integer> tcs = new TaskCompletionSource<>();
-        ExecutorService service = Executors.newFixedThreadPool(69);
+        ExecutorService service = Executors.newFixedThreadPool(1);
         String url = "https://www.googleapis.com/drive/v3/about?fields=storageQuota&access_token=" + token;
         AtomicInteger ai = new AtomicInteger(1);
         service.execute(() -> {
@@ -281,8 +277,9 @@ public class DriveService {
                                 })
                                 .addOnFailureListener(e -> {
                                     Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " is failed to create" + "2");
+                                    int fc = fileCountInsideFolder(root.getPath());
                                     if (root.listFiles() != null) {
-                                        for (int j = 0; j < root.listFiles().length; j++) {
+                                        for (int j = 0; j < fc; j++) {
                                             check(fileCount);
                                         }
                                     }
@@ -292,12 +289,28 @@ public class DriveService {
                     }
                 })
                 .addOnFailureListener(e -> {
+                    int fc = fileCountInsideFolder(root.getPath());
                     if (root.listFiles() != null) {
-                        for (int j = 0; j < root.listFiles().length; j++) {
+                        for (int j = 0; j < fc; j++) {
                             check(fileCount);
                         }
                     }
                 });
+    }
+
+    private int fileCountInsideFolder(String path) {
+        int i = 0;
+        java.io.File file = new java.io.File(path);
+        java.io.File[] files = file.listFiles();
+        if (files == null)
+            return 0;
+        for (java.io.File f : files) {
+            if (f.isDirectory()) {
+                i += fileCountInsideFolder(f.getPath());
+            } else
+                i++;
+        }
+        return i;
     }
 
     private void uploadFolderInside(java.io.File root, String id, int fileCount, Animation animation, int p) {

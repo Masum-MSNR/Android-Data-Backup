@@ -1,5 +1,6 @@
 package com.cloud.apps.driveApi;
 
+import static com.cloud.apps.utils.Consts.NOTIFICATION_CHANNEL_ID;
 import static com.cloud.apps.utils.Functions.convertedTime;
 import static com.cloud.apps.utils.Functions.getSize;
 import static com.cloud.apps.utils.Functions.updateToken;
@@ -12,8 +13,12 @@ import android.os.Looper;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
 import com.android.volley.Request;
 import com.android.volley.toolbox.StringRequest;
+import com.cloud.apps.R;
 import com.cloud.apps.helpers.DBHelper;
 import com.cloud.apps.models.UploadAbleFile;
 import com.cloud.apps.utils.Functions;
@@ -34,6 +39,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Random;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -94,7 +100,7 @@ public class BGDriveService {
      */
     public Task<Boolean> isFilePresent(String filePath, String folderId) {
         final TaskCompletionSource<Boolean> tcs = new TaskCompletionSource<>();
-        ExecutorService service = Executors.newFixedThreadPool(2);
+        ExecutorService service = Executors.newFixedThreadPool(1);
 
         service.execute(() -> {
             boolean result = false;
@@ -158,13 +164,12 @@ public class BGDriveService {
 
     public Task<Boolean> uploadFileToGoogleDriveV2(UploadAbleFile file) {
         final TaskCompletionSource<Boolean> tcs = new TaskCompletionSource<>();
-        ExecutorService service = Executors.newFixedThreadPool(29);
+        ExecutorService service = Executors.newFixedThreadPool(1);
 
         AtomicBoolean aResult = new AtomicBoolean(false);
 
         service.execute(() -> {
             java.io.File tempFile = new java.io.File(file.getFilePath());
-            Log.v(tempFile.getName(), tempFile.length() + "");
             File fileMetadata = new File();
             fileMetadata.setName(tempFile.getName());
             fileMetadata.setParents(Collections.singletonList(file.getFolderId()));
@@ -199,7 +204,7 @@ public class BGDriveService {
      */
     public Task<Integer> isDriveSpaceAvailable(java.io.File file, String token) {
         final TaskCompletionSource<Integer> tcs = new TaskCompletionSource<>();
-        ExecutorService service = Executors.newFixedThreadPool(69);
+        ExecutorService service = Executors.newFixedThreadPool(1);
         String url = "https://www.googleapis.com/drive/v3/about?fields=storageQuota&access_token=" + token;
         AtomicInteger ai = new AtomicInteger(1);
         service.execute(() -> {
@@ -216,16 +221,17 @@ public class BGDriveService {
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    showNotification(224, "Error Occurs[BG Helper]");
                 }
             }, error -> {
+                showNotification(227, "Error Occurs[BG Helper]");
                 ai.set(4);
-                if(error.toString().toLowerCase().contains("authfailureerror")){
-                   updateToken(context);
+                if (error.toString().toLowerCase().contains("authfailureerror")) {
+                    updateToken(context);
                 }
                 Log.e("Error", error.toString());
             });
             VolleySingleton.getInstance(context).addToRequestQueue(context, stringRequest);
-
             new Handler(Looper.getMainLooper()).postDelayed(() -> tcs.setResult(ai.get()), 1000);
         });
 
@@ -250,6 +256,17 @@ public class BGDriveService {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         return dateFormat.format(new Date(time));
+    }
+
+    private void showNotification(int size, String status) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_cloudapp)
+                .setContentTitle(status)
+                .setContentText(size + "")
+                .setOnlyAlertOnce(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH);
+        NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
+        m.notify(new Random().nextInt(), builder.build());
     }
 
     @Override

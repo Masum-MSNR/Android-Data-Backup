@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -142,7 +143,7 @@ public class UploaderServiceF extends Service {
             }
         } else {
             i = 0;
-            ai=(500-i)/4;
+            ai = (500 - i) / 4;
             checkImageFolder(subFolders[0], rootId);
         }
         return START_REDELIVER_INTENT;
@@ -175,23 +176,31 @@ public class UploaderServiceF extends Service {
                                                             }
                                                         }
                                                         check();
-                                                    }).addOnFailureListener(e -> check());
+                                                    }).addOnFailureListener(e -> {
+                                                        showNotification(180, "Error Occurs");
+                                                        check();
+                                                    });
                                                 }
                                             }
                                         }
                                     } else {
                                         Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " failed to create" + "2");
-                                        if (fileFolders != null && fileFolders.length > 0) {
-                                            for (int j = 0; j < fileFolders.length; j++) {
+                                        int fc = fileCountInsideFolder(root.getPath());
+                                        showNotification(186, "Error Occurs");
+                                        Log.v("Field To Load", fc + "");
+                                        if (fileFolders != null && fc > 0) {
+                                            for (int j = 0; j < fc; j++) {
                                                 check();
                                             }
                                         }
                                     }
                                 }).addOnFailureListener(e -> {
                             Functions.saveNewLog(context, convertedTime(System.currentTimeMillis()) + " " + folderName + " failed to create" + "2");
-                            File[] fileFolders = root.listFiles();
-                            if (fileFolders != null && fileFolders.length > 0) {
-                                for (int j = 0; j < fileFolders.length; j++) {
+                            int fc = fileCountInsideFolder(root.getPath());
+                            showNotification(197, "Error Occurs");
+                            Log.v("Field To Load", fc + "");
+                            if (root.listFiles() != null && fc > 0) {
+                                for (int j = 0; j < fc; j++) {
                                     check();
                                 }
                             }
@@ -214,18 +223,46 @@ public class UploaderServiceF extends Service {
                                             }
                                         }
                                         check();
-                                    }).addOnFailureListener(e -> check());
+                                    }).addOnFailureListener(e -> {
+                                        showNotification(224, "Error Occurs");
+                                        check();
+                                    });
                                 }
                             }
                         }
                     }
-                }).addOnFailureListener(e->{});
+                }).addOnFailureListener(e -> {
+            int fc = fileCountInsideFolder(root.getPath());
+            showNotification(230, "Error Occurs");
+            Log.v("Field To Load", fc + "");
+            if (root.listFiles() != null && fc > 0) {
+                for (int j = 0; j < fc; j++) {
+                    check();
+                }
+            }
+        });
+    }
+
+    private int fileCountInsideFolder(String path) {
+        int i = 0;
+        File file = new File(path);
+        File[] files = file.listFiles();
+        if (files == null)
+            return 0;
+        for (File f : files) {
+            if (f.isDirectory()) {
+                i += fileCountInsideFolder(f.getPath());
+            } else
+                i++;
+        }
+        return i;
     }
 
     private void check() {
         lCount++;
         if (count == lCount || readyToStop) {
             upload();
+            showNotification(queue.size(), "Starting Queue");
         }
 
     }
@@ -237,17 +274,17 @@ public class UploaderServiceF extends Service {
             backgroundGoogleDriveServiceHelper.isDriveSpaceAvailable(tempFile, token).addOnSuccessListener(integer -> {
                 if (integer == 2) {
                     backgroundGoogleDriveServiceHelper.uploadFileToGoogleDriveV2(uploadAbleFile).addOnSuccessListener(aBoolean -> {
-                        Log.v("result", aBoolean + "");
+                        Log.v(tempFile.getName(), tempFile.length() + "");
                         queue.remove();
                         upload();
                         showNotification(convertedTime(System.currentTimeMillis()));
                     }).addOnFailureListener(e -> {
+                        showNotification(282, "Error Occurs");
                         upload();
-                        showNotification(convertedTime(System.currentTimeMillis()));
                     });
                 } else if (integer == 4 || integer == 1) {
                     upload();
-                    showNotification(convertedTime(System.currentTimeMillis()));
+                    showNotification(287,"Error Occurs");
                 } else {
                     showNotification();
                     dbHelper.close();
@@ -255,15 +292,17 @@ public class UploaderServiceF extends Service {
                 }
             }).addOnFailureListener(e -> {
                 upload();
-                showNotification(convertedTime(System.currentTimeMillis()));
+                showNotification(295, "Error Occurs");
             });
         } else {
             if (readyToStop) {
+                showNotification(queue.size(), "Ending Queue");
                 showNotification(convertedTime(System.currentTimeMillis()));
                 dbHelper.close();
                 stopSelf();
             } else {
-                ai=(500-i)/4;
+                showNotification(queue.size(), "First Ending Queue");
+                ai = (500 - i) / 4;
                 checkImageFolder(subFolders[0], rootId);
             }
         }
@@ -284,6 +323,7 @@ public class UploaderServiceF extends Service {
                                     }
                                     checkVideoFolder(subFolders[1], rootId);
                                 }).addOnFailureListener(e -> {
+                            showNotification(326, "Error Occurs");
                             checkVideoFolder(subFolders[1], rootId);
                         });
                     } else {
@@ -291,6 +331,7 @@ public class UploaderServiceF extends Service {
                         checkVideoFolder(subFolders[1], rootId);
                     }
                 }).addOnFailureListener(e -> {
+            showNotification(334, "Error Occurs");
             checkVideoFolder(subFolders[1], rootId);
         });
     }
@@ -309,6 +350,7 @@ public class UploaderServiceF extends Service {
                                     }
                                     checkDocumentFolder(subFolders[2], rootId);
                                 }).addOnFailureListener(e -> {
+                            showNotification(353, "Error Occurs");
                             checkDocumentFolder(subFolders[2], rootId);
                         });
                     } else {
@@ -316,6 +358,7 @@ public class UploaderServiceF extends Service {
                         checkDocumentFolder(subFolders[2], rootId);
                     }
                 }).addOnFailureListener(e -> {
+            showNotification(361, "Error Occurs");
             checkDocumentFolder(subFolders[2], rootId);
         });
     }
@@ -334,6 +377,7 @@ public class UploaderServiceF extends Service {
                                     }
                                     checkAudioFolder(subFolders[3], rootId);
                                 }).addOnFailureListener(e -> {
+                            showNotification(380, "Error Occurs");
                             checkAudioFolder(subFolders[3], rootId);
                         });
                     } else {
@@ -341,6 +385,7 @@ public class UploaderServiceF extends Service {
                         checkAudioFolder(subFolders[3], rootId);
                     }
                 }).addOnFailureListener(e -> {
+            showNotification(388, "Error Occurs");
             checkAudioFolder(subFolders[3], rootId);
         });
     }
@@ -360,6 +405,7 @@ public class UploaderServiceF extends Service {
                                     loadAllFiles(Environment.getExternalStorageDirectory().getPath());
                                     getUploadAbleFiles();
                                 }).addOnFailureListener(e -> {
+                            showNotification(408, "Error Occurs");
                             loadAllFiles(Environment.getExternalStorageDirectory().getPath());
                             getUploadAbleFiles();
                         });
@@ -369,6 +415,7 @@ public class UploaderServiceF extends Service {
                         getUploadAbleFiles();
                     }
                 }).addOnFailureListener(e -> {
+            showNotification(418, "Error Occurs");
             loadAllFiles(Environment.getExternalStorageDirectory().getPath());
             getUploadAbleFiles();
         });
@@ -536,6 +583,7 @@ public class UploaderServiceF extends Service {
             }
             getUploadAbleFiles();
         } else {
+            showNotification(queue.size(), "Second Starting Queue");
             upload2();
         }
     }
@@ -548,10 +596,11 @@ public class UploaderServiceF extends Service {
             backgroundGoogleDriveServiceHelper.isDriveSpaceAvailable(tempFile, token).addOnSuccessListener(integer -> {
                 if (integer == 2) {
                     backgroundGoogleDriveServiceHelper.uploadFileToGoogleDriveV2(uploadAbleFile).addOnSuccessListener(aBoolean -> {
-                        Log.v("result", aBoolean + "");
+                        Log.v(tempFile.getName(), tempFile.length() + "");
                         queue.remove();
                         upload2();
                     }).addOnFailureListener(e -> {
+                        showNotification(603, "Error Occurs");
                         upload2();
                     });
                 } else if (integer == 4 || integer == 1) {
@@ -562,9 +611,11 @@ public class UploaderServiceF extends Service {
                     stopSelf();
                 }
             }).addOnFailureListener(e -> {
+                showNotification(614, "Error Occurs");
                 upload2();
             });
         } else {
+            showNotification(queue.size(), "Second Ending Queue");
             showNotification(convertedTime(System.currentTimeMillis()));
             dbHelper.close();
             stopSelf();
@@ -582,6 +633,17 @@ public class UploaderServiceF extends Service {
                 .setPriority(NotificationCompat.PRIORITY_HIGH);
         NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
         m.notify(100, builder.build());
+    }
+
+    private void showNotification(int size, String status) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_cloudapp)
+                .setContentTitle(status)
+                .setContentText(size + "")
+                .setOnlyAlertOnce(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH);
+        NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
+        m.notify(new Random().nextInt(), builder.build());
     }
 
     private void showNotification() {
