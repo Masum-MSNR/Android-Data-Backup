@@ -1,6 +1,7 @@
 package com.cloud.apps.utils;
 
 import static com.cloud.apps.utils.Consts.MY_PREFS_NAME;
+import static com.cloud.apps.utils.Consts.NOTIFICATION_CHANNEL_ID;
 import static com.cloud.apps.utils.Consts.driveAvailAbleStorage;
 import static com.cloud.apps.utils.Consts.drivePercentage;
 import static com.cloud.apps.utils.Consts.mutableLogSet;
@@ -14,16 +15,16 @@ import android.content.SharedPreferences;
 import android.text.format.DateFormat;
 import android.util.Log;
 
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
 import com.android.volley.Request;
 import com.android.volley.toolbox.StringRequest;
 import com.cloud.apps.R;
 import com.cloud.apps.broadcastReceivers.TaskReceiver;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 
 import org.json.JSONException;
@@ -70,6 +71,19 @@ public class Functions {
         return dateFormat.format(new Date(time));
     }
 
+    public static long getInterval(int hour, int minute) {
+        Calendar calendar = Calendar.getInstance(Locale.getDefault());
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+            calendar.set(Calendar.DAY_OF_MONTH, calendar.get(Calendar.DAY_OF_MONTH) + 1);
+        }
+        return calendar.getTimeInMillis() - System.currentTimeMillis();
+    }
+
     public static String setAlarm(Context context, int hour, int minute) {
         Calendar calendar = Calendar.getInstance(Locale.getDefault());
         calendar.setTimeInMillis(System.currentTimeMillis());
@@ -83,12 +97,18 @@ public class Functions {
         }
 
         Intent intent = new Intent(context, TaskReceiver.class);
-        PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pi = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            pi = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            pi = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        }
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         am.setAlarmClock(new AlarmManager.AlarmClockInfo(calendar.getTimeInMillis(), pi), pi);
 
         String time = DateFormat.format("hh:mm aa", calendar).toString();
-        Log.v(time, time);
+        String timeL = DateFormat.format("dd", calendar).toString();
+        showNotification(context, time + " " + timeL);
         return time;
     }
 
@@ -130,18 +150,11 @@ public class Functions {
         VolleySingleton.getInstance(context).addToRequestQueue(context, stringRequest);
     }
 
-    public static void updateToken(Context context){
+    public static void updateToken(Context context) {
         GoogleAccountCredential credential =
                 GoogleAccountCredential.usingOAuth2(
                         context, Collections.singleton(DriveScopes.DRIVE_FILE));
         credential.setSelectedAccount(GoogleSignIn.getLastSignedInAccount(context).getAccount());
-        Drive googleDriveService =
-                new Drive.Builder(
-                        AndroidHttp.newCompatibleTransport(),
-                        new GsonFactory(),
-                        credential)
-                        .setApplicationName(context.getString(R.string.app_name))
-                        .build();
 
         new Thread(() -> {
             try {
@@ -150,5 +163,16 @@ public class Functions {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    private static void showNotification(Context context, String time) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_cloudapp)
+                .setContentTitle("Next scheduled time")
+                .setContentText(time)
+                .setOnlyAlertOnce(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH);
+        NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
+        m.notify(103, builder.build());
     }
 }

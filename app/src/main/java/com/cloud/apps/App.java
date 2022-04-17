@@ -1,32 +1,52 @@
+
 package com.cloud.apps;
 
 import static com.cloud.apps.utils.Consts.MY_PREFS_NAME;
 import static com.cloud.apps.utils.Consts.NOTIFICATION_CHANNEL_ID;
 import static com.cloud.apps.utils.Consts.NOTIFICATION_CHANNEL_NAME;
+import static com.cloud.apps.utils.Functions.getInterval;
 
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.util.Log;
+
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import com.cloud.apps.utils.Functions;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class App extends Application {
+
+    private static final int JOB_ID = 101;
 
     @Override
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
         setAlarm();
-
     }
 
     private void setAlarm() {

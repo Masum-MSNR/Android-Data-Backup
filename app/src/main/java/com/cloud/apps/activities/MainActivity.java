@@ -9,9 +9,12 @@ import static com.cloud.apps.utils.Consts.previousId;
 import static com.cloud.apps.utils.Functions.getAbout;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -19,6 +22,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.cloud.apps.R;
 import com.cloud.apps.databinding.ActivityMainBinding;
+import com.cloud.apps.dialogs.SplashDialog;
 import com.cloud.apps.driveApi.DriveDownloadService;
 import com.cloud.apps.driveApi.DriveService;
 import com.cloud.apps.fragments.BlankFragment;
@@ -32,8 +36,8 @@ import com.cloud.apps.utils.PermissionHandler;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.material.navigation.NavigationBarView;
-import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
@@ -56,6 +60,10 @@ public class MainActivity extends AppCompatActivity {
     ActivityMainBinding binding;
     Fragment currentFragment;
     int navMenuId;
+
+
+    ActivityResultLauncher<Intent> launcher;
+
     private final NavigationBarView.OnItemSelectedListener listener = item -> {
         if (item.getItemId() == R.id.dashboard) {
             currentFragment = new DashboardFragment(MainActivity.this);
@@ -80,6 +88,20 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         getSupportActionBar().setTitle("Dashboard");
+
+        launcher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        });
+
+        if (getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).getBoolean("first", true)) {
+            SplashDialog dialog = new SplashDialog();
+            dialog.setCancelable(false);
+            dialog.show(getSupportFragmentManager(), dialog.getTag());
+        }
+
+//        Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+//        intent.addCategory("android.intent.category.DEFAULT");
+//        intent.setData(Uri.parse(String.format("package:%s", new Object[]{getApplicationContext().getPackageName()})));
+//        launcher.launch(intent);
 
         userRepo = UserRepo.getInstance(this);
         currentFragment = new DashboardFragment(this);
@@ -110,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                 credential.setSelectedAccount(Objects.requireNonNull(GoogleSignIn.getLastSignedInAccount(this)).getAccount());
                 Drive googleDriveService =
                         new Drive.Builder(
-                                AndroidHttp.newCompatibleTransport(),
+                                new NetHttpTransport(),
                                 new GsonFactory(),
                                 credential)
                                 .setApplicationName(getString(R.string.app_name))
@@ -138,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == 100 && grantResults.length == 2 && grantResults[0] == -1 || grantResults[1] == -1) {
             onBackPressed();
         } else {
+            getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit().putBoolean("first", false).apply();
             isFolderExits();
             filesRepo = FilesRepo.getInstance();
         }

@@ -32,6 +32,7 @@
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_connectivity.xml" value="0.33" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_log.xml" value="0.36666666666666664" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_main.xml" value="0.33" />
+        <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_onboarding.xml" value="0.25" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_selected_folder_list.xml" value="0.20416666666666666" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_settings.xml" value="0.25" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_specefic_file.xml" value="0.36666666666666664" />
@@ -46,6 +47,7 @@
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/adapter_log.xml" value="0.36666666666666664" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/dialog_loading.xml" value="0.20416666666666666" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/dialog_select_folder.xml" value="0.5" />
+        <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/dialog_splash.xml" value="0.25" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/fragment_blank.xml" value="0.20416666666666666" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/fragment_dashboard.xml" value="0.25" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/fragment_log.xml" value="0.36666666666666664" />

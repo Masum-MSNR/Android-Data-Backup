@@ -15,8 +15,8 @@ import com.cloud.apps.dialogs.SelectFolderDialog;
 import com.cloud.apps.driveApi.DriveService;
 import com.cloud.apps.utils.Functions;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
@@ -61,7 +61,7 @@ public class SelectedFolderListActivity extends AppCompatActivity implements Sel
             credential.setSelectedAccount(GoogleSignIn.getLastSignedInAccount(this).getAccount());
             googleDriveService =
                     new Drive.Builder(
-                            AndroidHttp.newCompatibleTransport(),
+                            new NetHttpTransport(),
                             new GsonFactory(),
                             credential)
                             .setApplicationName("Drive API Migration")

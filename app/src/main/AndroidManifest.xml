@@ -7,7 +7,8 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="your.package.alarm.permission.SET_ALARM" />
+    <uses-permission android:name="com.cloud.apps.alarm.permission.SET_ALARM" />
+    <uses-permission android:name="android.permission.SET_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
@@ -42,18 +43,27 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".services.UploaderServiceF" />
-        <service android:name=".services.UploaderServiceB" />
+        <service
+            android:name=".services.UploaderServiceF"
+            android:enabled="true"
+            android:exported="true" />
+        <service
+            android:name=".services.UploaderServiceB"
+            android:enabled="true"
+            android:exported="true" />
 
         <receiver
             android:name=".broadcastReceivers.TaskReceiver"
-            android:exported="false" />
+            android:enabled="true"
+            android:exported="true" />
         <receiver
             android:name=".broadcastReceivers.OnBootReceiver"
-            android:exported="false">
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
