@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.cloud.apps">
+    package="com.cloud254.apps">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -12,7 +12,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:name=".App"
+        android:name="com.cloud254.apps.App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -21,19 +21,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FileManagerDemo.WithActionBar">
         <activity
-            android:name=".activities.ViewFolderActivity"
+            android:name="com.cloud254.apps.activities.ViewFolderActivity"
             android:exported="true" />
         <activity
-            android:name=".activities.SpecificFileActivity"
+            android:name="com.cloud254.apps.activities.SpecificFileActivity"
             android:exported="true" />
         <activity
-            android:name=".activities.ConnectivityActivity"
+            android:name="com.cloud254.apps.activities.ConnectivityActivity"
             android:exported="true" />
         <activity
-            android:name=".activities.SelectedFolderListActivity"
+            android:name="com.cloud254.apps.activities.SelectedFolderListActivity"
             android:exported="true" />
         <activity
-            android:name=".activities.MainActivity"
+            android:name="com.cloud254.apps.activities.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.FileManagerDemo.WithActionBar">
             <intent-filter>
@@ -44,20 +44,21 @@
         </activity>
 
         <service
-            android:name=".services.UploaderServiceF"
+            android:name="com.cloud254.apps.services.UploaderServiceF"
             android:enabled="true"
             android:exported="true" />
+
         <service
-            android:name=".services.UploaderServiceB"
+            android:name="com.cloud254.apps.services.UploaderServiceB"
             android:enabled="true"
             android:exported="true" />
 
         <receiver
-            android:name=".broadcastReceivers.TaskReceiver"
+            android:name="com.cloud254.apps.broadcastReceivers.TaskReceiver"
             android:enabled="true"
             android:exported="true" />
         <receiver
-            android:name=".broadcastReceivers.OnBootReceiver"
+            android:name="com.cloud254.apps.broadcastReceivers.OnBootReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
