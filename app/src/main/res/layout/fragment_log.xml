@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.LogFragment">
+    tools:context="com.cloud254.apps.fragments.LogFragment">
 
 
     <androidx.recyclerview.widget.RecyclerView

@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.cloud.apps">
+    package="com.cloud254.apps">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="your.package.alarm.permission.SET_ALARM" />
+    <uses-permission android:name="com.cloud.apps.alarm.permission.SET_ALARM" />
+    <uses-permission android:name="android.permission.SET_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <application
         android:name=".App"
@@ -19,6 +23,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FileManagerDemo.WithActionBar">
+        <activity
+            android:name=".activities.Test"
+            android:exported="true">
+        </activity>
+        <activity
+            android:name=".activities.AppUsageStatisticsActivity"
+            android:exported="true">
+
+        </activity>
         <activity
             android:name=".activities.ViewFolderActivity"
             android:exported="true" />
@@ -42,18 +55,27 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".services.UploaderServiceF" />
-        <service android:name=".services.UploaderServiceB" />
+        <service
+            android:name=".services.UploaderServiceF"
+            android:enabled="true"
+            android:exported="true" />
+        <service
+            android:name=".services.UploaderServiceB"
+            android:enabled="true"
+            android:exported="true" />
 
         <receiver
             android:name=".broadcastReceivers.TaskReceiver"
-            android:exported="false" />
+            android:enabled="true"
+            android:exported="true" />
         <receiver
             android:name=".broadcastReceivers.OnBootReceiver"
-            android:exported="false">
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
