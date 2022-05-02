@@ -29,6 +29,7 @@
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/drawable/ic_server_svgrepo_com.xml" value="0.162" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/drawable/ic_settings_svgrepo_com.xml" value="0.173" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/drawable/ic_video_folder.xml" value="0.26" />
+        <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_app_usage_statistics.xml" value="0.35260416666666666" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_connectivity.xml" value="0.33" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_log.xml" value="0.36666666666666664" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/activity_main.xml" value="0.33" />
@@ -48,11 +49,13 @@
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/dialog_loading.xml" value="0.20416666666666666" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/dialog_select_folder.xml" value="0.5" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/dialog_splash.xml" value="0.25" />
+        <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/fragment_app_usage_statistics.xml" value="0.25104166666666666" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/fragment_blank.xml" value="0.20416666666666666" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/fragment_dashboard.xml" value="0.25" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/fragment_log.xml" value="0.36666666666666664" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/fragment_my_cloud.xml" value="0.25052083333333336" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/test.xml" value="0.25" />
+        <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/layout/usage_row.xml" value="0.25104166666666666" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/menu/home_menu.xml" value="0.20416666666666666" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/menu/log_menu.xml" value="0.36666666666666664" />
         <entry key="..\:/2.Android_Projects/OnGoingProjects/File Manager Demo/app/src/main/res/menu/nav_menu.xml" value="0.20416666666666666" />
