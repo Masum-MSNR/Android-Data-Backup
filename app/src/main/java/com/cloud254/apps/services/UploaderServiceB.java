@@ -143,7 +143,7 @@ public class UploaderServiceB extends Service {
                                     } else {
                                         Functions.saveNewLog(context, Functions.convertedTime(System.currentTimeMillis()) + " " + folderName + " failed to create" + "2");
                                         int fc = fileCountInsideFolder(root.getPath());
-                                        showNotification(159, "Error Occurs");
+//                                        showNotification(159, "Error Occurs");
                                         Log.v("Field To Load", fc + "");
                                         if (fileFolders != null && fc > 0) {
                                             for (int j = 0; j < fc; j++) {
@@ -154,7 +154,7 @@ public class UploaderServiceB extends Service {
                                 }).addOnFailureListener(e -> {
                             Functions.saveNewLog(context, Functions.convertedTime(System.currentTimeMillis()) + " " + folderName + " failed to create" + "2");
                             int fc = fileCountInsideFolder(root.getPath());
-                            showNotification(170, "Error Occurs");
+//                            showNotification(170, "Error Occurs");
                             Log.v("Field To Load", fc + "");
                             if (root.listFiles() != null && fc > 0) {
                                 for (int j = 0; j < fc; j++) {
@@ -185,7 +185,7 @@ public class UploaderServiceB extends Service {
                     }
                 }).addOnFailureListener(e -> {
             int fc = fileCountInsideFolder(root.getPath());
-            showNotification(201, "Error Occurs");
+//            showNotification(201, "Error Occurs");
             Log.v("Field To Load", fc + "");
             if (root.listFiles() != null && fc > 0) {
                 for (int j = 0; j < fc; j++) {
@@ -214,7 +214,7 @@ public class UploaderServiceB extends Service {
         lCount++;
         if (count == lCount || readyToStop) {
             upload();
-            showNotification(queue.size(), "Starting Queue");
+//            showNotification(queue.size(), "Starting Queue");
         }
 
     }
@@ -230,12 +230,12 @@ public class UploaderServiceB extends Service {
                         queue.remove();
                         upload();
                     }).addOnFailureListener(e -> {
-                        showNotification(247, "Error Occurs");
+//                        showNotification(247, "Error Occurs");
                         upload();
                     });
                 } else if (integer == 4 || integer == 1) {
                     upload();
-                    showNotification(252, "Error Occurs");
+//                    showNotification(252, "Error Occurs");
                 } else {
                     showNotification();
                     dbHelper.close();
@@ -244,10 +244,10 @@ public class UploaderServiceB extends Service {
                 }
             }).addOnFailureListener(e -> {
                 upload();
-                showNotification(260, "Error Occurs");
+//                showNotification(260, "Error Occurs");
             });
         } else {
-            showNotification(queue.size(), "Ending Queue");
+//            showNotification(queue.size(), "Ending Queue");
             showNotification(Functions.convertedTime(System.currentTimeMillis()));
             dbHelper.close();
             running = false;
@@ -270,18 +270,18 @@ public class UploaderServiceB extends Service {
         m.notify(100, builder.build());
     }
 
-    private void showNotification(int size, String status) {
-        if (!running)
-            return;
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, Consts.NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_cloudapp)
-                .setContentTitle(status)
-                .setContentText(size + "")
-                .setOnlyAlertOnce(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH);
-        NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
-        m.notify(new Random().nextInt(), builder.build());
-    }
+//    private void showNotification(int size, String status) {
+//        if (!running)
+//            return;
+//        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, Consts.NOTIFICATION_CHANNEL_ID)
+//                .setSmallIcon(R.drawable.ic_cloudapp)
+//                .setContentTitle(status)
+//                .setContentText(size + "")
+//                .setOnlyAlertOnce(true)
+//                .setPriority(NotificationCompat.PRIORITY_HIGH);
+//        NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
+//        m.notify(new Random().nextInt(), builder.build());
+//    }
 
     private void showNotification() {
         if (!running)

@@ -36,7 +36,7 @@ public class TaskReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         this.context = context;
-        showNotification(context);
+//        showNotification(context);
         SharedPreferences preferences = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
         String time = preferences.getString("time", "09:00 PM");
         DateFormat h12 = new SimpleDateFormat("hh:mm aa", Locale.getDefault());
@@ -63,13 +63,13 @@ public class TaskReceiver extends BroadcastReceiver {
 
     }
 
-    private static void showNotification(Context context) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_cloudapp)
-                .setContentTitle("BroadCast receiver called.")
-                .setOnlyAlertOnce(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH);
-        NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
-        m.notify(102, builder.build());
-    }
+//    private static void showNotification(Context context) {
+//        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+//                .setSmallIcon(R.drawable.ic_cloudapp)
+//                .setContentTitle("BroadCast receiver called.")
+//                .setOnlyAlertOnce(true)
+//                .setPriority(NotificationCompat.PRIORITY_HIGH);
+//        NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
+//        m.notify(102, builder.build());
+//    }
 }
