@@ -108,7 +108,7 @@ public class Functions {
 
         String time = DateFormat.format("hh:mm aa", calendar).toString();
         String timeL = DateFormat.format("dd", calendar).toString();
-        showNotification(context, time + " " + timeL);
+//        showNotification(context, time + " " + timeL);
         return time;
     }
 
@@ -165,14 +165,14 @@ public class Functions {
         }).start();
     }
 
-    private static void showNotification(Context context, String time) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_cloudapp)
-                .setContentTitle("Next scheduled time")
-                .setContentText(time)
-                .setOnlyAlertOnce(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH);
-        NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
-        m.notify(103, builder.build());
-    }
+//    private static void showNotification(Context context, String time) {
+//        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+//                .setSmallIcon(R.drawable.ic_cloudapp)
+//                .setContentTitle("Next scheduled time")
+//                .setContentText(time)
+//                .setOnlyAlertOnce(true)
+//                .setPriority(NotificationCompat.PRIORITY_HIGH);
+//        NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
+//        m.notify(103, builder.build());
+//    }
 }
