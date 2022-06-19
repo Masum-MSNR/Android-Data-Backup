@@ -8,6 +8,7 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.cloud254.apps.R;
 import com.cloud254.apps.adapters.FullFolderAdapter;
 import com.cloud254.apps.databinding.ActivitySelectedFolderListBinding;
 import com.cloud254.apps.dialogs.LoadingDialog;
@@ -64,7 +65,7 @@ public class SelectedFolderListActivity extends AppCompatActivity implements Sel
                             new NetHttpTransport(),
                             new GsonFactory(),
                             credential)
-                            .setApplicationName("Drive API Migration")
+                            .setApplicationName(getString(R.string.app_name))
                             .build();
             driverServiceHelper = new DriveService(this, googleDriveService);
         }
