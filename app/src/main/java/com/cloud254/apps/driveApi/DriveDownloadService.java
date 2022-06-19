@@ -41,7 +41,7 @@ public class DriveDownloadService {
             FileList fileList = null;
             try {
                 fileList = drive.files().list()
-                        .setQ("trashed=false and parents='"+parentId+"'")
+                        .setQ("trashed=false and parents='" + parentId + "'")
                         .setFields("files(id, name, mimeType,parents)")
                         .setSpaces("drive")
                         .setPageSize(1000)
