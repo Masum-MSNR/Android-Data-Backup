@@ -94,45 +94,6 @@ public class BGDriveService {
         return tcs.getTask();
     }
 
-
-    /**
-     * Checks a file is already present in drive or not.
-     */
-    public Task<Boolean> isFilePresent(String filePath, String folderId) {
-        final TaskCompletionSource<Boolean> tcs = new TaskCompletionSource<>();
-        ExecutorService service = Executors.newFixedThreadPool(1);
-
-        service.execute(() -> {
-            boolean result = false;
-            java.io.File tempFile = new java.io.File(filePath);
-            FileList fileList = null;
-            try {
-                fileList = drive.files().list()
-                        .setQ("mimeType!='application/vnd.google-apps.folder' and trashed=false and parents='" + folderId + "'")
-                        .setFields("files(id, name, modifiedTime)")
-                        .setSpaces("drive")
-                        .execute();
-            } catch (IOException ignored) {
-            }
-
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-            if (fileList != null) {
-                for (File file : fileList.getFiles()) {
-                    if (file.getName().equals(tempFile.getName()) && convertedDateTime(tempFile.lastModified()).equals(file.getModifiedTime().toString())) {
-                        result = true;
-                        break;
-                    }
-                }
-            }
-            boolean finalResult = result;
-            new Handler(Looper.getMainLooper()).postDelayed(() -> tcs.setResult(finalResult), 1000);
-
-        });
-
-        return tcs.getTask();
-    }
-
     /**
      * Creates a folder.
      */
@@ -221,10 +182,8 @@ public class BGDriveService {
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    showNotification(224, "Error Occurs[BG Helper]");
                 }
             }, error -> {
-                showNotification(227, "Error Occurs[BG Helper]");
                 ai.set(4);
                 if (error.toString().toLowerCase().contains("authfailureerror")) {
                     updateToken(context);
@@ -250,23 +209,6 @@ public class BGDriveService {
                     fileExtension.toLowerCase());
         }
         return mimeType;
-    }
-
-    public String convertedDateTime(long time) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return dateFormat.format(new Date(time));
-    }
-
-    private void showNotification(int size, String status) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_cloudapp)
-                .setContentTitle(status)
-                .setContentText(size + "")
-                .setOnlyAlertOnce(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH);
-        NotificationManagerCompat m = NotificationManagerCompat.from(context.getApplicationContext());
-        m.notify(new Random().nextInt(), builder.build());
     }
 
     @Override

@@ -162,34 +162,6 @@ public class ConnectivityActivity extends AppCompatActivity implements SelectFol
         adapter.notifyItemRangeChanged(0, 4 + folderNames.size() + 1);
     }
 
-    private void checkLogin() {
-        GoogleAccountCredential credential =
-                GoogleAccountCredential.usingOAuth2(
-                        this, Collections.singleton(DriveScopes.DRIVE_FILE));
-        credential.setSelectedAccount(Objects.requireNonNull(GoogleSignIn.getLastSignedInAccount(this)).getAccount());
-
-        Drive googleDriveService =
-                new Drive.Builder(
-                        new NetHttpTransport(),
-                        new GsonFactory(),
-                        credential)
-                        .setApplicationName(getString(R.string.app_name))
-                        .build();
-        new Thread(() -> {
-            try {
-                Functions.getAbout(ConnectivityActivity.this, credential.getToken());
-            } catch (IOException | GoogleAuthException e) {
-                e.printStackTrace();
-            }
-        }).start();
-        userRepo.setDriveServiceHelper(new DriveService(this, googleDriveService));
-        userRepo.setDriveDownloadService(new DriveDownloadService(googleDriveService));
-        userRepo.getLogin().setValue(true);
-        isConnecting.setValue(true);
-
-        checkRootFolder();
-    }
-
     private void checkRootFolder() {
         userRepo.getDriveServiceHelper().isFolderPresent(Consts.GLOBAL_KEY, "root").addOnSuccessListener(id -> {
             if (id.isEmpty()) {

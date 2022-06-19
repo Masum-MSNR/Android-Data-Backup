@@ -22,7 +22,6 @@ import java.util.Locale;
 
 public class App extends Application {
 
-    private static final int JOB_ID = 101;
 
     @Override
     public void onCreate() {

@@ -115,17 +115,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        if (getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).getBoolean("first", true)) {
-//            SplashDialog dialog = new SplashDialog();
-//            dialog.setCancelable(false);
-//            dialog.show(getSupportFragmentManager(), dialog.getTag());
-//        }
-
-//        Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
-//        intent.addCategory("android.intent.category.DEFAULT");
-//        intent.setData(Uri.parse(String.format("package:%s", new Object[]{getApplicationContext().getPackageName()})));
-//        launcher.launch(intent);
-
         userRepo = UserRepo.getInstance(this);
         currentFragment = new DashboardFragment(this);
         navMenuId = R.id.dashboard;
